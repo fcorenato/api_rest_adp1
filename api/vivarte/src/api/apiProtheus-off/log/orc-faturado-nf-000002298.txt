@@ -1,0 +1,26 @@
+{
+    "nota": "000002298",
+    "codOrc": "10596",
+    "message": "Nota fiscal gerada",
+    "chave": "23220806010153000368550010000022981961970607",
+    "Pedido": [
+        {
+            "codProd": "PPL6030",
+            "qtdEnt": 88.02,
+            "item": "02",
+            "qtdVen": 88.02,
+            "qtdPen": 0
+        },
+        {
+            "codProd": "TTVR2375",
+            "qtdEnt": 50.22,
+            "item": "01",
+            "qtdVen": 50.22,
+            "qtdPen": 0
+        }
+    ],
+    "erroCod": "200",
+    "codPed": "000784",
+    "serie": "1  ",
+    "filial": "010201"
+}
