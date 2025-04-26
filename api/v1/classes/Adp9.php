@@ -19,6 +19,7 @@ class Adp9
                         v.cnpj_cpf_rodape,
                         p.codigo               AS cod_operador,
                         p.fantasia_codinome    AS apelido,
+                        iv.sequencia_item      AS seqi,
                         i.codigo               AS prod_codigo,
                         i.denominacao          AS prod_descricacao,
                         ci.denominacao         AS categoria,

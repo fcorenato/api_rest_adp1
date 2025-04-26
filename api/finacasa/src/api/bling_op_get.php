@@ -1,8 +1,8 @@
 <?php
-// require('../config/SUsuario.php');
+require('../config/SUsuario.php');
 $api_bling_op == 'off';
 if ($api_bling_op == 'on') {
-    $apikey = '3f254d9c3055473dbec4679632239d9c470d6c25a0505c95ddd57bcdad3201af40007953';
+    $apikey = $un_bling_apikey;
     $outputType = "json";
 
     $api_pagina = 0;

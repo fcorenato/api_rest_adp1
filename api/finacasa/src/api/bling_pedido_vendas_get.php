@@ -1,6 +1,6 @@
 <?php
-// require('../config/SUsuario.php');
-$apikey = '3f254d9c3055473dbec4679632239d9c470d6c25a0505c95ddd57bcdad3201af40007953';
+require('../config/SUsuario.php');
+$apikey = $un_bling_apikey;
 $outputType = "json";
 
 //filtros
@@ -137,25 +137,25 @@ while ($bling_api_cod_erro == 0) {
 
 
 
-// // consultando a data de entrega no orcamento biv
-// require('../config/conexao.php');
-// foreach ($pedido_vendas_array_api as $key_ped => $value_ped) {
-//     $id_ped_web = $value_ped['ped_web_num'];
-//     //$pedido_vendas_array_api[$key_ped]['ped_emissao'] = 'a0';
-//     if ($id_ped_web != "") {
-//         $query_pw = "SELECT pedido_prev_ent FROM md_vendas_pedidos WHERE id = $id_ped_web";
-//         $result_query_pw = mysql_query($query_pw);
-//         $qtde_query_pw = mysql_num_rows($result_query_pw);
-//         if ($qtde_query_pw > 0) {
-//             while ($campos_pw = mysql_fetch_array($result_query_pw)) {
-//                 if ($campos_pw['pedido_prev_ent'] != '' || $campos_pw['pedido_prev_ent'] != NULL) {
-//                     //$data_em_pw = date("d/m/y", strtotime($campos_pw['pedido_prev_ent']));
-//                     $pedido_vendas_array_api[$key_ped]['ped_previsao'] = $campos_pw['pedido_prev_ent'];
-//                 }
-//             }
-//         }
-//     }
-// }
+// consultando a data de entrega no orcamento biv
+require('../config/conexao.php');
+foreach ($pedido_vendas_array_api as $key_ped => $value_ped) {
+    $id_ped_web = $value_ped['ped_web_num'];
+    //$pedido_vendas_array_api[$key_ped]['ped_emissao'] = 'a0';
+    if ($id_ped_web != "") {
+        $query_pw = "SELECT pedido_prev_ent FROM md_vendas_pedidos WHERE id = $id_ped_web";
+        $result_query_pw = mysql_query($query_pw);
+        $qtde_query_pw = mysql_num_rows($result_query_pw);
+        if ($qtde_query_pw > 0) {
+            while ($campos_pw = mysql_fetch_array($result_query_pw)) {
+                if ($campos_pw['pedido_prev_ent'] != '' || $campos_pw['pedido_prev_ent'] != NULL) {
+                    //$data_em_pw = date("d/m/y", strtotime($campos_pw['pedido_prev_ent']));
+                    $pedido_vendas_array_api[$key_ped]['ped_previsao'] = $campos_pw['pedido_prev_ent'];
+                }
+            }
+        }
+    }
+}
 
 
 // ORDENANDO POR DATA DE PREVISAO(ENTREGA) E NUM PEDIDO PARA FICAR OS ITENS DO PEIDO JUNTOS

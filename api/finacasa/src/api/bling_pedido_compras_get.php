@@ -1,6 +1,6 @@
 <?php
-// require('../config/SUsuario.php');
-$apikey = '3f254d9c3055473dbec4679632239d9c470d6c25a0505c95ddd57bcdad3201af40007953';
+require('../config/SUsuario.php');
+$apikey = $un_bling_apikey;
 $outputType = "json";
 
 //filtros

@@ -1,6 +1,6 @@
 <?php
-// require('../config/SUsuario.php');
-$apikey = '3f254d9c3055473dbec4679632239d9c470d6c25a0505c95ddd57bcdad3201af40007953';
+require('../config/SUsuario.php');
+$apikey = $un_bling_apikey;
 $outputType = "json";
 
 $api_pagina = 0;
@@ -28,6 +28,7 @@ while ($bling_api_cod_erro == 0) {
     //finalizando CURL ====================================================================
 
     $resultado = json_decode($retorno);
+    //print("<pre>" . print_r($resultado, true) . "</pre>");
 
     if ($resultado->retorno->erros) {
         $bling_api_cod_erro = $resultado->retorno->erros[0]->erro->cod;
@@ -36,27 +37,27 @@ while ($bling_api_cod_erro == 0) {
     } else {
 
         foreach ($resultado->retorno->produtos as $prod) {
+            $qtd_reg++;
+            $prod_saldo_it = 0;
+            $vh_pa_saldo = 0;
+            $vc_pa_saldo = 0;
+            
             foreach ($prod->produto->depositos as $dep) {
 
-                $estoquedisp[] = array(
-                    'ref' => $prod->produto->codigo,
-                    'ref_desc' => $prod->produto->descricao,
-                    'ref_um' => $prod->produto->unidade,
-                    'saldo_disp' =>  $dep->deposito->saldo,
-                    'saldo_disp_atu' =>  $dep->deposito->saldo,
-                    'deposito' => $dep->deposito->nome
-                );
-
-                
-                //echo 'dep'. $dep->deposito->nome.'<br>';
-
+                    $produtos_array[$prod->produto->codigo] = array(
+                        'ref' => $prod->produto->codigo,
+                        'ref_desc' => $prod->produto->descricao,
+                        'ref_um' => $prod->produto->unidade,
+                        'marca' => $prod->produto->marca,
+                        'saldo_disp' =>  $prod_saldo_it,
+                        'saldo_disp_atu' =>  $prod_saldo_it,
+                        'tipo_sped' => $prod->produto->spedTipoItem
+                    );
                 
             }
-
-
-            
         }
     }
     usleep( 400000 );
 }
-//print("<pre>" . print_r($estoquedisp, true) . "</pre>");
+// echo 'Qtde Registros= '.$qtd_reg;
+// print("<pre>" . print_r($produtos_array, true) . "</pre>");

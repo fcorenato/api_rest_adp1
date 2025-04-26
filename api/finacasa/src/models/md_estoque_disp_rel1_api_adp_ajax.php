@@ -104,7 +104,7 @@ include_once('../api/bling_produtos_get.php');
 //     $est_array_qtde_it[$value_op['ref']] += $value_op['saldo_disp'];
 // }
 
-require('conexao_finacasa.php');
+require('../config/conexao.php');
 //pesquisando relatorio cronjob
 $query3 = "SELECT referencia, SUM(saldo_disp) AS saldo_disp FROM `md_estoque_bling` 
             WHERE saldo_disp > 0
@@ -193,7 +193,7 @@ foreach ($produtos_array as $key_prod => $value_prod) {
     }
     $if_qtde = $est_array_qtde_it[$ref_it] + $op_array_qtde_it[$ref_it] + $pc_array_qtde_it[$ref_it] + $pv_array_qtde_it[$ref_it] + $saldo_disp_item;
 
-    if ($imprimi_item and $if_qtde > 0) {
+    if ($imprimi_item) {
         $relatorio_result .= '
         <tr class="' . $bg_total . ' tr_result" >
             <td>' . $value_prod['ref'] . '</td>
@@ -221,8 +221,7 @@ $conteudo = str_replace('"', 'ASPD', $relatorio_result);
 
 date_default_timezone_set('America/Sao_Paulo');
 
-$data_atu = date('d/m/Y H:i:s');
-$result = mysql_query('UPDATE md_cronjob SET nome = "md_estoque_disp_rel1_ajax", conteudo = "' . $conteudo . '", update_at = "' . $data_atu . '" where id = 1') or die(mysql_error());
+// $data_atu = date('d/m/Y H:i:s');
+// $result = mysql_query('UPDATE md_cronjob SET nome = "md_estoque_disp_rel1_ajax", conteudo = "' . $conteudo . '", update_at = "' . $data_atu . '" where id = 1') or die(mysql_error());
 
-echo 'conectou---- <hr>';
 echo $relatorio_result;

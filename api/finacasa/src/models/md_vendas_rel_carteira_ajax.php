@@ -1,9 +1,7 @@
 <?php
-//inicio do cronometro
-$inicio2 = microtime(true);
-
 date_default_timezone_set('America/Sao_Paulo');
 require('../config/conexao.php');
+require('../../src/config/SUsuario.php');
 include_once('../../sys_functions.php');
 
 // ============== AJAX CARTEIRA ==============================================
@@ -14,7 +12,7 @@ $atender_parcial_estoque = TRUE;
 $atender_parcial_op = TRUE;
 $atender_parcial_pc = TRUE;
 $consulta_estoque = TRUE;
-$consulta_op = TRUE;
+$consulta_op = FALSE;
 $consulta_pc = TRUE;
 $processar_carteira = TRUE;
 $imprimi_item_carteira = TRUE;
@@ -25,17 +23,30 @@ $pesquisa_por_produto  = '';
 $pesquisa_por_cliente  = '';
 $pesquisa_por_unidade  = '';
 $imprimi_apenas_resumo_ref = FALSE;
+$imprimi_valores = TRUE; //imprimir valores R$ na carteira
+
+//imprimir valores R$ na carteira
+if ($perfil == 'V') {
+    $imprimi_valores = FAlSE;
+}
+
 
 //recebendo POST 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 
     if (isset($_POST['pedido']) and $_POST['pedido'] != '') {
-        $num_pedidos = str_replace(' ', '', $_POST['pedido']);
-        $pesquisa_por_pedido = explode(",", $num_pedidos);
-        //$subtotal_por_pedido_ultimo = FALSE;
+        $pesquisa_por_pedido = $_POST['pedido'];
+        $subtotal_por_pedido = FALSE;
     } else {
-        $pesquisa_por_pedido = 0;
+        $pesquisa_por_pedido = '';
+    }
+
+    if (isset($_POST['orcamento']) and $_POST['orcamento'] != '') {
+        $pesquisa_por_orcamento = $_POST['orcamento'];
+        $subtotal_por_pedido = FALSE;
+    } else {
+        $pesquisa_por_orcamento = '';
     }
 
     if (isset($_POST['cliente']) and $_POST['cliente'] != '') {
@@ -132,28 +143,16 @@ $total_geral_est = 0;
 $total_geral_op = 0;
 $total_geral_pc = 0;
 
-//array com a identificação da unidade onde o pedido está.
-$ud_array['204261108'] = 'VH/VC';
-$ud_array['204264525'] = 'VH/VC';
-$ud_array['204264613'] = 'VH/VC';
-$ud_array['204415556'] = 'AG';
-$ud_array['204581986'] = 'VM';
-
-
 if ($processar_carteira) {
     //chamdada api pedidos get
     // include_once('../../src/api/bling_pedido_vendas_get.php');
-    // //chamdada api prod_estoque get
-    // include_once('../../src/api/bling_prod_estoque_get.php');
-    // //chamdada api Op get
-    // include_once('../../src/api/bling_op_get.php');
-    // //chamdada api PC get
-    // include_once('../../src/api/bling_pedido_compras_get.php');
-
-    //chamdada api bling v3
     include_once('../../src/api/bv3_pv_get.php');
-    include_once('../../src/api/bv3_prod_estoque_get.php');
-    include_once('../../src/api/bv3_op_get.php');
+    //chamdada api prod_estoque get
+    include_once('../../src/api/bling_prod_estoque_biv_get.php');
+    //chamdada api Op get
+    //include_once('../../src/api/bling_op_get.php');
+    //chamdada api PC get
+    // include_once('../../src/api/bling_pedido_compras_get.php');
     include_once('../../src/api/bv3_pc_get.php');
 
     if ($api_qtde_pedido == 0) {
@@ -166,7 +165,7 @@ if ($processar_carteira) {
             </tbody>
         </table>
         ';
-        // echo $carteira_processada;
+        echo $carteira_processada;
         exit;
     } else {
         //criar array com dados do produto:
@@ -176,7 +175,6 @@ if ($processar_carteira) {
         if ($qtde_query1 > 0) {
             while ($campos = mysql_fetch_array($result_query1)) {
                 $prod_array_ipi[trim($campos['referencia'])] = $campos['ipi'];
-                $prod_array_peso[trim($campos['referencia'])] = $campos['peso'];
             }
         }
         //incluindo IPI no valor do item
@@ -226,9 +224,9 @@ if ($processar_carteira) {
 
                 if ($atender_parcial_estoque) {
                     foreach ($estoquedisp as $key_estoq => $value_estoq) {
-                        if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] > 0 and($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET' )) {
+                        if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] > 0) {
                             $saldo_disp_atu_item_corrent_calc1 = round($value_estoq['saldo_disp_atu'], 2) - $qtde_pendente_pv;
-                            $qtde_sugerida_item_atual =0;
+                            $qtde_sugerida_item_atual = 0;
                             //nao deixar saldo ficar negativo
                             if ($saldo_disp_atu_item_corrent_calc1 < 0) {
                                 $saldo_disp_atu_item_corrent = 0;
@@ -246,12 +244,12 @@ if ($processar_carteira) {
 
 
                             $destacar_estoque = 'style="background-color: LightGreen;"';
-                            $dep_est_atende .= $estoquedisp[$key_estoq]['deposito'] . ' ('. number_format($qtde_sugerida_item_atual,    2, ',', '.').') ';
+                            $dep_est_atende .= $estoquedisp[$key_estoq]['deposito'] . ' (' . number_format($qtde_sugerida_item_atual,    2, ',', '.') . ') ';
                         }
                     }
                 } else {
                     foreach ($estoquedisp as $key_estoq => $value_estoq) {
-                        if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] >= $qtde_pendente_pv and($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET' )) {
+                        if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] >= $qtde_pendente_pv) {
                             $estoquedisp[$key_estoq]['saldo_disp_atu'] = round($value_estoq['saldo_disp_atu'], 2) - $qtde_pendente_pv;
                             $saldo_disp_atu_item_corrent = round($value_estoq['saldo_disp_atu'], 2) - $qtde_pendente_pv;
                             $qtde_sugerida_estoque = $qtde_pendente_pv;
@@ -266,56 +264,7 @@ if ($processar_carteira) {
             $pedido_vendas_array[$key_ped]['est_sugest'] = $qtde_sugerida_estoque;
             // ======== fim do  1 - Verificando no estoque disponivel  =======
 
-            //  =============== (2) Verificando OPs  ============
 
-            $qtde_sugerida_op = 0;
-            $destacar_op = '';
-            $data_prev_op = '';
-            $item_doc_atend_op = '';
-            $item_data_prev_op = '';
-
-            if ($qtde_pendente_pv > 0 and $consulta_op and $atender_pedidovenda) {
-                if ($atender_parcial_op) {
-                    foreach ($op_array as $key_op => $value_op) {
-                        if ($value_op['op_ref'] == $value_ped['item_ref']  and $qtde_pendente_pv > 0 and $value_op['op_qtde_atu'] > 0) {
-                            $qtde_sugerida_op_item_atual = 0;
-                            $saldo_disp_atu_item_corrent_calc1 = round($value_op['op_qtde_atu'], 2) - $qtde_pendente_pv;
-                            if ($saldo_disp_atu_item_corrent_calc1 < 0) {
-                                $saldo_disp_atu_item_corrent = 0;
-                                $qtde_pendente_pv = $qtde_pendente_pv - round($value_op['op_qtde_atu'], 2);
-                                $qtde_sugerida_op += round($value_op['op_qtde_atu'], 2);
-                                $qtde_sugerida_op_item_atual = round($value_op['op_qtde_atu'], 2);
-                            } else {
-                                $saldo_disp_atu_item_corrent = $saldo_disp_atu_item_corrent_calc1;
-                                $qtde_sugerida_op += $qtde_pendente_pv;
-                                $qtde_sugerida_op_item_atual = $qtde_pendente_pv;
-                                $qtde_pendente_pv = 0;
-                            }
-
-                            $op_array[$key_op]['op_qtde_atu'] = $saldo_disp_atu_item_corrent;
-
-                            $destacar_op = 'style="background-color: LightGreen;"';
-                            $item_data_prev_op .= substr($value_op['op_previsaoFinal'], 0, 10) . ' ';
-                            $item_doc_atend_op .= 'OP:' . $value_op['op_num'] . ' ('. number_format($qtde_sugerida_op_item_atual,    2, ',', '.').') ';
-                        }
-                    }
-                } else {
-                    foreach ($op_array as $key_op => $value_op) {
-                        if ($value_op['op_ref'] == $value_ped['item_ref']  and $qtde_pendente_pv > 0 and $value_op['op_qtde_atu'] >= $qtde_pendente_pv) {
-                            $op_array[$key_op]['op_qtde_atu'] = round($value_op['op_qtde_atu'], 2) - $qtde_pendente_pv;
-                            $saldo_disp_atu_item_corrent = round($value_op['op_qtde_atu'], 2) - $qtde_pendente_pv;
-                            $qtde_sugerida_op = $qtde_pendente_pv;
-                            $qtde_pendente_pv = 0;
-                            $destacar_op = 'style="background-color: LightGreen;"';
-                            $item_data_prev_op = substr($value_op['op_previsaoFinal'], 0, 10);
-                            $item_doc_atend_op = 'OP:' . $value_op['op_num'];
-                        }
-                    }
-                }
-            }
-            $pedido_vendas_array[$key_ped]['op_sugest'] = $qtde_sugerida_op;
-
-            // ======== fim do  2 - Verificando Ops  ==========
 
             //  =============== (3) Verificando Pedidos de Compra  ============
             $qtde_sugerida_pc = 0;
@@ -365,7 +314,7 @@ if ($processar_carteira) {
                                 $pc_array[$key_pc]['pc_qtde_atu'] = $saldo_disp_atu_item_corrent;
 
                                 $destacar_pc = 'style="background-color: LightGreen;"';
-                                $item_data_prev_pc .= $value_pc['pc_previsao'] . ' ';
+                                $item_data_prev_pc .= date("d/m/Y", strtotime(substr($value_pc['pc_previsao'], 0, 10))) . ' ';
                                 $item_doc_atend_pc .= 'PC:' . $value_pc['pc_num'] . ' ';
                             }
                         }
@@ -378,7 +327,7 @@ if ($processar_carteira) {
                             $qtde_sugerida_pc = $qtde_pendente_pv;
                             $qtde_pendente_pv = 0;
                             $destacar_pc = 'style="background-color: LightGreen;"';
-                            $item_data_prev_pc = $value_pc['pc_previsao'] . ' ';
+                            $item_data_prev_pc = date("d/m/Y", strtotime(substr($value_pc['pc_previsao'], 0, 10)));
                             $item_doc_atend_pc = 'PC:' . $value_pc['pc_num'];
                         }
                     }
@@ -396,13 +345,13 @@ if ($processar_carteira) {
             $ped_item_status_color = 'style=""';
 
             if ($qtde_pendente_pv > 0 and $qtde_sugerida_op == 0 and $qtde_sugerida_PC == 0) {
-                $ped_item_status = 'PRODUZIR';
+                $ped_item_status = 'COMPRAR';
                 $ped_item_status_color = 'style="background-color: orange;color:#ffff;"';
             } else if ($qtde_pendente_pv == 0 and $qtde_sugerida_op > 0) {
                 $ped_item_status = 'PROGRAMADO';
                 $ped_item_status_color = 'style=""';
             } else if ($qtde_pendente_pv == 0 and $qtde_sugerida_pc > 0) {
-                $ped_item_status = 'PROGRAMADO AGAS';
+                $ped_item_status = 'PED COMPRAS';
                 $ped_item_status_color = 'style=""';
             } else if ($qtde_pendente_pv > 0 and ($qtde_sugerida_pc > 0 or $qtde_sugerida_op > 0)) {
                 $ped_item_status = 'PRODUZIR';
@@ -427,29 +376,30 @@ if ($processar_carteira) {
             $pedido_vendas_array[$key_ped]['saldo_est'] = $saldo_disp_atu_item_corrent;
         } // fim do foreach pedidos
 
+        //se imprime valores == false
+        $titulo_col_valor = $imprimi_valores ? 'Valor R$ c/ ipi' : '-';
+
         $carteira_processada = '
             <table id="tabela_relatorio" class="table table-sm table-hover table-bordered table-head-fixed tabela_carteira">
             <thead>
-			<tr>    
-                    <th>UD</th>
+			<tr>
 					<th>Ped Bling</th>
                     <th>Orc Biv</th>
                     <th>Nome Cliente</th>
                     <th>Emissão</th>
 					<th>Entrega</th>
 					<th>Cond. Pgto</th>
-					<th>Valor R$ c/ ipi</th>
+					<th>' . $titulo_col_valor . '</th>
 					<th>Produto</th>
 					<th>Qtde Pedido</th>
 					<th>EST Sugest</th>
-					<th>OP Sugest</th>
 					<th>PC Sugest</th>
                     <th>Qtde Pend</th>
 					<th>Situação</th>
 					<th>Data Prev</th>
 					<th>Doc</th>
                     <th>Saldo EST</th>
-                    <th class="dados-extras d-none">Tipo Cli</th>
+                    <th>Obs Pedido</th>
                     <th class="dados-extras d-none">UF</th>
                     <th class="dados-extras d-none">Cidade</th>
                     <th class="dados-extras d-none">Bairro</th>
@@ -457,7 +407,7 @@ if ($processar_carteira) {
                     <th class="dados-extras d-none">Peso Bruto</th>
                     <th class="dados-extras d-none">Frete</th>
                     <th class="dados-extras d-none" style="width: auto" >Msg Nota</th>
-                    <th class="dados-extras d-none" style="width: 200px" >Obs Ped Cli</th>
+                    
             </tr>
             </thead>
             <tbody>
@@ -502,7 +452,6 @@ if ($processar_carteira) {
 
                         $carteira_processada .= '
                             <tr class="bg_subtotal_rel tr_result" >
-                            <td></td>
                             <td>' . $num_pedido_check . '</td>
                             <td><a target="_blank" href="src/relpdf/orcamento.php?id=' . $total_ped_web_num . '&state=view" >' . $total_ped_web_num . '</a></td>
                             <td>' . $total_pedido_nomecli . '</td>
@@ -513,14 +462,13 @@ if ($processar_carteira) {
                             <td align="right">' . number_format($total_pedido_valor + $total_pedido_frete,    2, ',', '.') . '</td>
                             <td align="right">' . number_format($total_pedido_qtde,    2, ',', '.') . '</td>
                             <td align="right">' . number_format($total_pedido_est,    2, ',', '.') . '</td>
-                            <td align="right">' . number_format($total_pedido_op,    2, ',', '.') . '</td>
                             <td align="right">' . number_format($total_pedido_pc,    2, ',', '.') . '</td>
                             <td align="right">' . number_format($total_pedido_pendente,    2, ',', '.') . '</td>
                             <td align="right" ' . $status_pedido_color . '>' . $status_pedido . '</td>
                             <td align="right"></td>
                             <td align="right"></td>
                             <td align="right"></td>
-                            <td class="dados-extras d-none">' . $total_pedido_cli_tipo . '</td>
+                            <td>' . $total_pedido_obs_interna . '</td>
                             <td class="dados-extras d-none">' . $total_pedido_cli_est . '</td>
                             <td class="dados-extras d-none">' . $total_pedido_cli_mun . '</td>
                             <td class="dados-extras d-none">' . $total_pedido_cli_bairro . '</td>
@@ -528,7 +476,7 @@ if ($processar_carteira) {
                             <td class="dados-extras d-none" align="right">' . number_format($total_pedido_pesobruto,    2, ',', '.') . '</td>
                             <td class="dados-extras d-none" align="right">' . number_format($total_pedido_frete,    2, ',', '.') . '</td>
                             <td class="dados-extras d-none" align="right">' . $total_pedido_mennota . '</td>
-                            <td class="dados-extras d-none" align="right">' . $total_pedido_yobsped . '</td>
+                            
                             
                             ';
 
@@ -554,12 +502,7 @@ if ($processar_carteira) {
             $item_valor_cipi =  round($item_valor_cipi, 2);
 
             //verificando se previsa de entrega preenchido
-            if ($value_ped['ped_previsao'] == '' OR $value_ped['ped_previsao'] == '0000-00-00') {
-                $ped_data_prev = '';
-            } else {
-                $ped_data_prev = date("d/m/y", strtotime($value_ped['ped_previsao']));
-            }
-            
+            $ped_data_prev = $value_ped['ped_previsao'] == '' ? '' : date("d/m/y", strtotime($value_ped['ped_previsao']));
 
             $destacar_estoque = $value_ped['est_sugest'] > 0 ? 'style="background-color: LightGreen;"' : '';
             $destacar_op = $value_ped['op_sugest'] > 0 ? 'style="background-color: LightGreen;"' : '';
@@ -567,18 +510,23 @@ if ($processar_carteira) {
 
             //filtro por produto
             $filtro_por_produto = $pesquisa_por_produto == '' ? $value_ped['item_ref'] : $pesquisa_por_produto;
+
+            //filtro por pedido
+            $filtro_por_pedido = $pesquisa_por_pedido == '' ? $value_ped['ped_num'] : $pesquisa_por_pedido;
+
+            //filtro por orcamento biv
+            $filtro_por_orcamento = $pesquisa_por_orcamento == '' ? $value_ped['ped_web_num'] : $pesquisa_por_orcamento;
+
             // ============== imprimir itens da carteira  ===========================
             //<td>' . date("d/m/y", strtotime($value_ped['ped_emissao'])) . '</td>
 
-            
+            //se nao imprimir valores = false
+            $item_valor_cipi = $imprimi_valores ? $item_valor_cipi : 0;
+            $total_pedido_frete = $total_pedido_frete ? $item_valor_cipi : 0;
 
-            if ($imprimi_item_carteira and $filtro_por_produto == $value_ped['item_ref']) {
-
-                $peso_item = $prod_array_peso[$value_ped['item_ref']] * $value_ped['item_qtde'];
-                
+            if ($imprimi_item_carteira and $filtro_por_produto == $value_ped['item_ref'] and $filtro_por_pedido == $value_ped['ped_num'] and $filtro_por_orcamento == $value_ped['ped_web_num']) {
                 $carteira_processada .= '
-                    <tr class="tr_result '.$value_ped['item_ref'].'">
-                    <td>' . $ud_array[$value_ped['ped_ud']] . '</td>
+                    <tr class="tr_result">
                     <td>' . $value_ped['ped_num'] . '</td>
                     <td><a target="_blank" href="src/relpdf/orcamento.php?id=' . $value_ped['ped_web_num'] . '&state=view" >' . $value_ped['ped_web_num'] . '</a></td>
                     <td>' . substr($value_ped['cliente_nome'], 0, 18) . '</td>
@@ -589,22 +537,21 @@ if ($processar_carteira) {
                     <td><a target="_blank" href="md_vendas_rel_carteira.php?referencia=' . $value_ped['item_ref'] . '" >' . $value_ped['item_ref'] . '</a></td>
                     <td align="right">' . exibirValor($value_ped['item_qtde']) . '</td>
                     <td align="right" ' . $destacar_estoque . '>' . exibirValor($value_ped['est_sugest']) . '</td>
-                    <td align="right" ' . $destacar_op . '>' . exibirValor($value_ped['op_sugest']) . '</td>
                     <td align="right" ' . $destacar_pc . '>' . exibirValor($value_ped['pc_sugest']) . '</td>
                     <td align="right">' . exibirValor($value_ped['qtde_pend']) . '</td>
                     <td ' . $value_ped['situacao_color'] . '>' . $value_ped['situacao'] . '</td>
                     <td>' . $value_ped['data_prev'] . '</td>  
                     <td>' . $value_ped['doc'] . '</td>  
                     <td align="right">' . exibirValor($value_ped['saldo_est']) . '</td>
-                    <td class="dados-extras d-none">' . $value_ped['cliente_tipo'] . '</td>
+                    <td>' . $value_ped['ped_obs_interna'] . '</td> 
                     <td class="dados-extras d-none">' . $value_ped['cliente_uf'] . '</td>
                     <td class="dados-extras d-none">' . $value_ped['cliente_cidade'] . '</td>
                     <td class="dados-extras d-none">' . $value_ped['cliente_bairro'] . '</td> 
-                    <td class="dados-extras d-none">' . $value_ped['item_volume'] . '</td> 
-                    <td align="right" class="dados-extras d-none">' . exibirValor($peso_item) . '</td> 
+                    <td class="dados-extras d-none"></td> 
+                    <td align="right" class="dados-extras d-none">' . exibirValor($value_ped['item_pesototal']) . '</td> 
                     <td class="dados-extras d-none"></td> 
                     <td class="dados-extras d-none"></td> 
-                    <td class="dados-extras d-none"></td> 
+                    
                     </tr>
                     ';
 
@@ -629,10 +576,10 @@ if ($processar_carteira) {
                 $total_pedido_cli_est = $value_ped['cliente_uf'];
                 $total_pedido_cli_mun = $value_ped['cliente_cidade'];
                 $total_pedido_cli_bairro = $value_ped['cliente_bairro'];
+                $total_pedido_obs_interna = $value_ped['ped_obs_interna'];
 
-                $total_pedido_pesobruto += $peso_item;
-                $total_pedido_volume = $value_ped['ped_volume'];
-                $total_pedido_cli_tipo = $value_ped['cliente_tipo'];
+                $total_pedido_pesobruto += $value_ped['item_pesototal'];
+
                 $cond_pgto_confpgto = $value_ped['ped_situacao'] == 'Em aberto' ? 'CONF PGTO' : 'PAGO';
                 $total_dep_est_atende .= $dep_est_atende;
 
@@ -680,7 +627,6 @@ if ($processar_carteira) {
 
                     $carteira_processada .= '
                         <tr class="bg_subtotal_rel tr_result" >
-                        <td></td>
                         <td>' . $num_pedido_check . '</td>
                         <td><a target="_blank" href="src/relpdf/orcamento.php?id=' . $total_ped_web_num . '&state=view" >' . $total_ped_web_num . '</a></td>
                         <td>' . $total_pedido_nomecli . '</td>
@@ -691,22 +637,20 @@ if ($processar_carteira) {
                         <td align="right">' . number_format($total_pedido_valor + $total_pedido_frete,    2, ',', '.') . '</td>
                         <td align="right">' . number_format($total_pedido_qtde,    2, ',', '.') . '</td>
                         <td align="right">' . number_format($total_pedido_est,    2, ',', '.') . '</td>
-                        <td align="right">' . number_format($total_pedido_op,    2, ',', '.') . '</td>
                         <td align="right">' . number_format($total_pedido_pc,    2, ',', '.') . '</td>
                         <td align="right">' . number_format($total_pedido_pendente,    2, ',', '.') . '</td>
                         <td align="right" ' . $status_pedido_color . '>' . $status_pedido . '</td>
                         <td align="right"></td>
                         <td align="right"></td>
                         <td align="right"></td>
+                        <td>' . $total_pedido_obs_interna . '</td>
                         <td class="dados-extras d-none">' . $total_pedido_cli_est . '</td>
                         <td class="dados-extras d-none">' . $total_pedido_cli_mun . '</td>
                         <td class="dados-extras d-none">' . $total_pedido_cli_bairro . '</td>
-                        <td class="dados-extras d-none">' . $total_pedido_cli_tipo . '</td>
                         <td class="dados-extras d-none" align="right">' . number_format($total_pedido_volume,    2, ',', '.') . '</td>
                         <td class="dados-extras d-none" align="right">' . number_format($total_pedido_pesobruto,    2, ',', '.') . '</td>
                         <td class="dados-extras d-none" align="right">' . number_format($total_pedido_frete,    2, ',', '.') . '</td>
                         <td class="dados-extras d-none" align="right">' . $total_pedido_mennota . '</td>
-                        <td class="dados-extras d-none" align="right">' . $total_pedido_yobsped . '</td>
                         
                         ';
 
@@ -729,12 +673,11 @@ if ($processar_carteira) {
         if ($processar_carteira) {
             $carteira_processada .=  '
                     <tr class="bg_subtotal_rel tr_result" >
-                        <td colspan="7">TOTAL GERAL ' . $qtde_pedido_cart . ' Pedido(s)</td>
+                        <td colspan="6">TOTAL GERAL ' . $qtde_pedido_cart . ' Pedido(s)</td>
                         <td align="right">' . number_format($total_geral_valor,    2, ',', '.') . '</td>
                         <td align="right"></td>
                         <td align="right">' . number_format($total_geral_qtde,    2, ',', '.') . '</td>    
                         <td align="right">' . number_format($total_geral_est,    2, ',', '.') . '</td>
-                        <td align="right">' . number_format($total_geral_op,    2, ',', '.') . '</td>
                         <td align="right">' . number_format($total_geral_pc,    2, ',', '.') . '</td>
                         
                         <td align="right">' . number_format($total_geral_pendente,    2, ',', '.') . '</td>					
@@ -743,6 +686,7 @@ if ($processar_carteira) {
                         <td align="right"></td>	
                         <td align="right"></td>	
                         <td align="right"></td>
+                        <td align="right"></td>
                         <td class="dados-extras d-none">' . $total_pedido_cli_est . '</td>
                         <td class="dados-extras d-none">' . $total_pedido_cli_mun . '</td>
                         <td class="dados-extras d-none">' . $total_pedido_cli_bairro . '</td>
@@ -750,7 +694,7 @@ if ($processar_carteira) {
                         <td class="dados-extras d-none" align="right"></td>
                         <td class="dados-extras d-none" align="right"></td>
                         <td class="dados-extras d-none" align="right"></td>
-                        <td class="dados-extras d-none" align="right"></td>
+                        
                     </tr>';
         } // fim do Se imprimi a carteira
 
@@ -771,7 +715,7 @@ if ($imprimi_apenas_resumo_ref) {
 if ($pesquisa_por_produto <> '') {
 
     //se perfil vendedor externo nao exibe colunas 
-    if ($perfil == 'V') {  // SE PERFIL FOR VENDEDOR EXIBIR APENAS OS DISPONIVEIS
+    if ($perfil == 'VEND') {  // SE PERFIL FOR VENDEDOR EXIBIR APENAS OS DISPONIVEIS
         // ============ ESTOQUE DISPONIVEL  ============
         $carteira_processada .= '
         <div class="col">
@@ -903,12 +847,12 @@ if ($pesquisa_por_produto <> '') {
             $pc_empenho = 0;
             if ($value_pc['pc_ref'] == $produto and $value_pc['pc_qtde'] > 0) {
                 $pc_empenho = $value_pc['pc_qtde'] - $value_pc['pc_qtde_atu'];
-                $item_data_prev = $value_pc['pc_previsao'];
+                $item_data_prev = substr($value_pc['pc_previsao'], 0, 10);
                 if ($value_pc['pc_qtde_atu'] > 0) {
                     $carteira_processada .= '
                     <tr>
                         <td>' . $value_pc['pc_num'] . '</td>
-                        <td>' . $item_data_prev . '</td>
+                        <td>' . date("d/m/Y", strtotime($item_data_prev)) . '</td>
                         <td>' . $unidade_medida_produto_pesquisado . '</td>
             
                         <td align="right">' . number_format($value_pc['pc_qtde_atu'],    2, ',', '.') . '</td>
@@ -1030,66 +974,7 @@ if ($pesquisa_por_produto <> '') {
 		</table>
 	';
 
-        // ============ OPs DISPONIVEL  ============
 
-        $carteira_processada .= '<strong> OP:</strong>';
-        $carteira_processada .= '
-        <table id="tabela_relatorio" class="table table-sm table-hover table-bordered tabela_carteira">
-        <thead>
-		<tr class="bg_subtotal_rel">
-				<th >OP</th>
-                <th>Data Prev</th>
-				<th>UM</th>
-				<th     style="width: 160px;">Quantidade</th>
-				<th style="width: 160px;">Empenho</th>
-				<th style="width: 160px;" class="bg-success">Disponivel</th>
-        </tr>
-        </thead>
-        <tbody>';
-
-        //percorrer array ordems producao
-        $total_disp_op_saldo = 0;
-        $total_disp_op_empenho = 0;
-        $total_disp_op_diponivel = 0;
-        $item_data_prev = '';
-        foreach ($op_array as $key_op => $value_op) {
-            $op_empenho = 0;
-            if ($value_op['op_ref'] == $produto and $value_op['op_qtde'] > 0) {
-                $op_empenho = $value_op['op_qtde'] - $value_op['op_qtde_atu'];
-                $item_data_prev = substr($value_op['op_previsaoFinal'], 0, 10);
-                $carteira_processada .= '
-	    	<tr>
-				<td>' . $value_op['op_num'] . '</td>
-                <td>' . $item_data_prev . '</td>
-				<td>' . $unidade_medida_produto_pesquisado . '</td>
-				<td align="right">' . number_format($value_op['op_qtde'],    2, ',', '.') . '</td>
-				<td align="right">' . number_format($op_empenho,    2, ',', '.') . '</td>
-				<td align="right">' . number_format($value_op['op_qtde_atu'],    2, ',', '.') . '</td>
-
-			</tr>
-	    	';
-
-                $total_disp_op_saldo += $value_op['op_qtde'];
-                $total_disp_op_empenho += $op_empenho;
-                $total_disp_op_diponivel += $value_op['op_qtde_atu'];
-            }
-        } // fim do foreach
-
-        //total geral
-        $total_geral_disp_saldo += $total_disp_op_saldo;
-        $total_geral_disp_empenho += $total_disp_op_empenho;
-        $total_geral_disp_disponivel += $total_disp_op_diponivel;
-
-        $carteira_processada .= '
-		<tr class="bg_subtotal_rel" >
-			<td colspan="3" > TOTAL </td>
-			<td align="right">' . number_format($total_disp_op_saldo,    2, ',', '.') . '</td>
-			<td align="right">' . number_format($total_disp_op_empenho,    2, ',', '.') . '</td>
-			<td align="right" class="bg-success">' . number_format($total_disp_op_diponivel,    2, ',', '.') . '</td>
-        </tr>
-        </tbody>
-		</table>
-	';
 
         // ============ PCs DISPONIVEL  ============
 
@@ -1117,11 +1002,11 @@ if ($pesquisa_por_produto <> '') {
             $pc_empenho = 0;
             if ($value_pc['pc_ref'] == $produto and $value_pc['pc_qtde'] > 0) {
                 $pc_empenho = $value_pc['pc_qtde'] - $value_pc['pc_qtde_atu'];
-                $item_data_prev = $value_pc['pc_previsao'];
+                $item_data_prev = substr($value_pc['pc_previsao'], 0, 10);
                 $carteira_processada .= '
 	    	<tr>
 				<td>' . $value_pc['pc_num'] . '</td>
-                <td>' . $item_data_prev . '</td>
+                <td>' . date("d/m/Y", strtotime($item_data_prev)) . '</td>
 				<td>' . $unidade_medida_produto_pesquisado . '</td>
 				<td  align="right">' . number_format($value_pc['pc_qtde'],    2, ',', '.') . '</td>
 				<td  align="right">' . number_format($pc_empenho,    2, ',', '.') . '</td>
@@ -1182,115 +1067,4 @@ if ($pesquisa_por_produto <> '') {
 		';
     }
 } //  fim do IF de consulta de estoque ===================================================
-// echo $carteira_processada;
-$carteira_processada = str_replace("'", "", $carteira_processada);
-$update_at = date("Y-m-d H:i:s");
-// salvar relatorio processado ===================================================
-
-$limpa_tabela = mysql_query("TRUNCATE md_vendas_carteira_rel") or die(mysql_error());
-$query_rel_cart = "INSERT INTO `md_vendas_carteira_rel` (`id`, `conteudo`, `create_at`) VALUES ('1', '$carteira_processada', '$update_at');";
-
-// echo '<hr>' . $query_rel_cart . '<hr>';
-
-$result = mysql_query($query_rel_cart) or die(mysql_error());
-
-// se atualizar estoque no biv ===================================================
-$atualiza_estoque_biv = TRUE;
-if ($atualiza_estoque_biv) {
-    
-    include('../config/conexao.php');
-    $limpa_tabela = mysql_query("TRUNCATE md_estoque_disponivel_detail;") or die(mysql_error());
-    
-    //ESTOQUE
-    foreach ($estoquedisp as $key_estoq => $value_estoq) {
-        $ref_prod = '';
-        $saldo_prod = 0;
-        $estoque_empenho = 0;
-        $saldo_disp = 0;
-        $unidade_medida_produto_pesquisado = '';
-        $local = '';
-        $tipo_estq = '';
-        $data_prev = '';
-        $estoque_menos_total_pedidos = 0;
-
-        if ($value_estoq['saldo_disp'] > 0) {
-            $ref_prod = $value_estoq['ref'];
-            $saldo_prod = $value_estoq['saldo_disp'];
-            $estoque_empenho = $value_estoq['saldo_disp'] - $value_estoq['saldo_disp_atu'];
-            $saldo_disp = $value_estoq['saldo_disp_atu'];
-            $unidade_medida_produto_pesquisado = $value_estoq['ref_um'];
-            $local = $value_estoq['deposito'];
-            $tipo_estq = "ESTQ";
-            $data_prev = ' ';
-
-            $result = mysql_query("INSERT INTO md_estoque_disponivel_detail (referencia, unid_medida, tipo_estq, local, data_prev, saldo, empenho, saldo_disp, update_at) VALUES ('$ref_prod', '$unidade_medida_produto_pesquisado', '$tipo_estq', '$local', '$data_prev', '$saldo_prod', ' $estoque_empenho', ' $saldo_disp', '$update_at')") or die(mysql_error());
-            // echo 'incluindo estoque  = '. $result.'<br>';
-           
-        }
-    } // fim do foreach
-
-
-    //ORDEM PRODUCAO
-    foreach ($op_array as $key_op => $value_op) {
-        $ref_prod = '';
-        $saldo_prod = 0;
-        $estoque_empenho = 0;
-        $saldo_disp = 0;
-        //$unidade_medida_produto_pesquisado = '';
-        $local = '';
-        $tipo_estq = '';
-        $data_prev = '';
-        $estoque_menos_total_pedidos = 0;
-        
-        if ($value_op['op_qtde'] > 0) {
-            $ref_prod = $value_op['op_ref'];
-            $saldo_prod = $value_op['op_qtde'];
-            $estoque_empenho = $value_op['op_qtde'] - $value_op['op_qtde_atu'];
-            $saldo_disp = $value_op['op_qtde_atu'];
-            $local = $value_op['op_num'];
-            $tipo_estq = "OP";
-            $data_prev = substr($value_op['op_previsaoFinal'], 0, 10);
-
-            $result = mysql_query("INSERT INTO md_estoque_disponivel_detail (referencia, unid_medida, tipo_estq, local, data_prev, saldo, empenho, saldo_disp, update_at) VALUES ('$ref_prod', '$unidade_medida_produto_pesquisado', '$tipo_estq', '$local', '$data_prev', '$saldo_prod', ' $estoque_empenho', ' $saldo_disp', '$update_at')") or die(mysql_error());
-
-           
-        }
-    } // fim do foreach
-
-
-    //PEDIDO DE COMPRA
-    foreach ($pc_array as $key_pc => $value_pc) {
-        $ref_prod = '';
-        $saldo_prod = 0;
-        $estoque_empenho = 0;
-        $saldo_disp = 0;
-        $unidade_medida_produto_pesquisado = '';
-        $local = '';
-        $tipo_estq = '';
-        $data_prev = '';
-        $estoque_menos_total_pedidos = 0;
-        
-        if ($value_pc['pc_qtde'] > 0) {
-            $ref_prod = $value_pc['pc_ref'];
-            $saldo_prod = $value_pc['pc_qtde'];
-            $estoque_empenho = $value_pc['pc_qtde'] - $value_pc['pc_qtde_atu'];
-            $saldo_disp = $value_pc['pc_qtde_atu'];
-            $local = $value_pc['pc_num'];
-            $tipo_estq = "PC";
-            $data_prev = substr($value_pc['pc_previsao'], 0, 10);
-            $unidade_medida_produto_pesquisado = $value_pc['pc_ref_um'];
-
-            $result = mysql_query("INSERT INTO md_estoque_disponivel_detail (referencia, unid_medida, tipo_estq, local, data_prev, saldo, empenho, saldo_disp, update_at) VALUES ('$ref_prod', '$unidade_medida_produto_pesquisado', '$tipo_estq', '$local', '$data_prev', '$saldo_prod', ' $estoque_empenho', ' $saldo_disp', '$update_at')") or die(mysql_error());
-
-           
-        }
-    } // fim do foreach
-
-    
-}//  fim do IF  atualizar estoque no BIV ===================================================
-
-echo 'fim';
-//fim do cronometro
-$fim2 = microtime(true);
-$tempoExecucao2 = $fim2 - $inicio2;
-printf("<hr>O script levou %f segundos para finalizar.\n", $tempoExecucao2);
+echo $carteira_processada;
