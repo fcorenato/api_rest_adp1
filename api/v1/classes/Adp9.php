@@ -11,8 +11,6 @@ class Adp9
         $props = explode('-', $parametros);
         $datetime_last_reg= $props[0];
 
-        echo 'data e hora: ' . $datetime_last_reg . '<hr>';
-
         // 5 - dados vendas geral para CLUBE G7
         $sql4 = "SELECT v.data_cupom,
                         se.codigo              AS cod_empresa,
@@ -50,8 +48,7 @@ class Adp9
                 ORDER BY v.cnpj_cpf_rodape,  se.codigo, v.numero_cupom, Date(data_cupom)
         ";
 
-        echo $sql4 . '<hr>';
-        
+
         $sql = $con->prepare($sql4);
         $sql->execute();
         //print_r($sql->errorInfo());
