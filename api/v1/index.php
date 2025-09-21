@@ -35,10 +35,10 @@ class Rest
 
 					return json_encode(array('status' => 'sucesso', 'dados' => $retorno));
 				} else {
-					return json_encode(array('status' => 'erro', 'dados' => 'Método inexistente!'));
+					return json_encode(array('status' => 'erro', 'dados' => 'Método inexistente! m1'));
 				}
 			} else {
-				return json_encode(array('status' => 'erro', 'dados' => 'Classe inexistente!'));
+				return json_encode(array('status' => 'erro', 'dados' => 'Classe inexistente! m2'));
 			}	
 		} catch (Exception $e) {
 			return json_encode(array('status' => 'erro', 'dados' => $e->getMessage()));
