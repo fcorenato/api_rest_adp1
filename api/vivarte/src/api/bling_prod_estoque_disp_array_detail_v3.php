@@ -140,6 +140,10 @@ $ud_array['204415556'] = 'AG';
 $ud_array['204581986'] = 'VM';
 
 
+$data_inicio = date('Ym', strtotime('-' . $retro + 1 . ' months')) . '01'; // 1 dia do mes
+$data_final = date('Ymd');  // ultimo dia do mes
+
+
 if ($processar_carteira) {
     //chamdada api pedidos get
     // include_once('../../src/api/bling_pedido_vendas_get.php');
@@ -186,6 +190,16 @@ if ($processar_carteira) {
 
         //=== historico de vendas 6 meses por produto para relatorio programacao
         $retro = 6;
+
+        $data_inicio = date('Ym', strtotime('-' . $retro . ' months')) . '01'; // 1 dia do mes
+        $data_final = date('Ymt', strtotime('-1 months'));  // ultimo dia do mes
+
+        //definindo nome colunas qtde meses selecionado
+        for ($i = 1; $i <= $retro + 1; $i++) {
+            $colunames[] = date('n/Y', strtotime('-' . $i . ' months'));
+        }
+
+
         $data_inicio = date('Ym', strtotime('-' . $retro . ' months')) . '01'; // 1 dia do mes
         $data_final = date('Ymt', strtotime('-1 months'));  // ultimo dia do mes
         $query1 = "SELECT YEAR(p.pedido_conv_date) as ano, MONTH(p.pedido_conv_date) AS mes,i.codigo, SUM(i.qtde) as qtd  FROM `md_vendas_pedidos` as p 
@@ -1360,6 +1374,17 @@ $relatorio_prog .= '
             <th data-toggle="tooltip" title="Prev de duração do estoque em meses">DISP MÊS</th>
        ';
 
+//imprimindo colunas meses
+for ($i = 0; $i < $retro; $i++) {
+    $idx = ($retro - 1) - $i;
+    $relatorio_prog .= '<th class="dados-extras d-none">' . $colunames[$idx] . '</th>';
+}
+
+$relatorio_result .= '
+            </tr>
+            </thead>
+            <tbody>';
+
 foreach ($produtos_array as $key_ref => $prod_un) {
     //estoque do item
 
@@ -1367,18 +1392,18 @@ foreach ($produtos_array as $key_ref => $prod_un) {
     $saldo_disp_item = $prog_estoque[$ref_it] + $prog_op[$ref_it] + $prog_pc[$ref_it] - $prog_pv[$ref_it];
 
     //imprimir apenas item que tem dados
-    if ($prog_estoque[$ref_it] > 0 OR $prog_op[$ref_it] > 0 OR $prog_pc[$ref_it] > 0 OR $prog_pv[$ref_it] > 0) {
+    if ($prog_estoque[$ref_it] > 0 or $prog_op[$ref_it] > 0 or $prog_pc[$ref_it] > 0 or $prog_pv[$ref_it] > 0) {
         $imprimi_item = TRUE;
     } else {
         $imprimi_item = FALSE;
     }
 
-    
+
     if ($imprimi_item) {
         $relatorio_prog .= '
         <tr class="' . $bg_total . ' tr_result" >
             <td>' . $key_ref . '</td>
-            <td>'. $produtos_desc_array[$ref_it] .'</td>
+            <td>' . $produtos_desc_array[$ref_it] . '</td>
             <td>' . $prod_un . '</td>
             <td align="right">' . number_format($prog_estoque[$ref_it],    2, ',', '.') . '</td>
             <td align="right">' . number_format($prog_op[$ref_it],    2, ',', '.') . '</td>
@@ -1389,6 +1414,14 @@ foreach ($produtos_array as $key_ref => $prod_un) {
             <td align="right">' . number_format($venda_prod_array[$ref_it] / 6,    2, ',', '.') . '</td>
             <td align="right">' . number_format($saldo_disp_item / ($venda_prod_array[$ref_it] / 6),    2, ',', '.') . '</td>
         ';
+
+        //exibindo venda por mes
+        for ($i = 0; $i < $retro; $i++) {
+            $idx = ($retro - 1) - $i;
+            $venda_index = '';
+            $venda_index = $ref_it . '-' . $colunames[$idx];
+            $relatorio_prog .= '<td class="dados-extras d-none" align="right">' . number_format($venda_prod_mesames_array[$venda_index],    2, ',', '.') . '</td>';
+        }
 
         $relatorio_prog .= '                       
                     </tr>';
