@@ -1167,7 +1167,7 @@ if ($atualiza_estoque_biv) {
             $saldo_prod = $value_pc['pc_qtde'];
             $estoque_empenho = $value_pc['pc_qtde'] - $value_pc['pc_qtde_atu'];
             $saldo_disp = $value_pc['pc_qtde_atu'];
-            $local = $value_pc['pc_num'];
+            $local = $value_pc['pc_num'] . '(' . $value_pc['observacoesInternas'] . ')';
             $tipo_estq = "PC";
             $data_prev = substr($value_pc['pc_previsao'], 0, 10);
             $unidade_medida_produto_pesquisado = $value_pc['pc_ref_um'];

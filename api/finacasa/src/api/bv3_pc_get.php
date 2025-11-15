@@ -92,7 +92,8 @@ while ($bling_api_cod_erro == 0) {
                             'pc_emissao' => $resultado2->data->data,
                             'pc_previsao' => date("d/m/Y", strtotime($resultado2->data->dataPrevista)),
                             'pc_fornecedor' => $resultado2->data->fornecedor->id,
-                            'pc_ordemcompra' => $resultado2->data->ordemCompra
+                            'pc_ordemcompra' => $resultado2->data->ordemCompra,
+                            'observacoesInternas' => $resultado2->data->observacoesInternas
 
                         );
                     }
