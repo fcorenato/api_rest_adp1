@@ -20,17 +20,20 @@ $password = "d2ss1efnjerk";
 // $con = new PDO("pgsql:host=$host;dbname=$dbname", $username, $password);
 
 
-$timeout = 300;
+$timeout = 0;
 
 $con = new PDO(
     "pgsql:host=$host;port=$port;dbname=$dbname",
     $username,
     $password,
     [
-        PDO::ATTR_TIMEOUT => $timeout,
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ]
 );
+
+// Remove o timeout para esta conexão
+$con->exec("SET statement_timeout = 0;");
+
 
 $q = $con->prepare("SELECT pg_sleep(120)");
 $q->execute();
