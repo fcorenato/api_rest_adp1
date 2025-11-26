@@ -1,5 +1,6 @@
 <?php
-
+ini_set('default_socket_timeout', 300);
+ini_set('max_execution_time', 300);
 class Adp8
 {
     public function mostrar($parametros)
