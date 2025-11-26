@@ -1,4 +1,8 @@
 <?php
+ini_set('default_socket_timeout', 300);
+ini_set('max_execution_time', 300);
+
+$timeout = 300;
 
 // Configurações de conexão com o banco de dados
 
