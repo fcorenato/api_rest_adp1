@@ -124,6 +124,7 @@ while ($bling_api_cod_erro == 0) {
                         $total_volumes = '';
                         $total_peso = '';
                         $msg_pedido = '';
+                        $pedido_prev_ent = '';
                         $query2 = "SELECT cliente_tipo, cpf_cnpj, bairro, cidade, uf, total_volumes, total_peso, msg_pedido, msg_nota, pedido_prev_ent 
                                         FROM `md_vendas_pedidos` 
                                         WHERE id = $pedido->numeroPedidoCompra";
@@ -147,7 +148,11 @@ while ($bling_api_cod_erro == 0) {
                         }
 
                         //print("<pre>" . print_r($estoquedisp, true) . "</pre>");//
+                        // if ($pedido->contato->nome == 'PRODUÇÃO ESTOQUE') {
+                        //     $pedido_prev_ent = '2050-12-31';
+                        // }
 
+                        $pedido_prev_ent = $pedido_prev_ent != '' ? $pedido_prev_ent : $pedido->dataPrevista;
 
                         $pedido_vendas_array_api[] = array(
 
@@ -309,6 +314,7 @@ while ($bling_api_cod_erro == 0) {
                         $total_volumes = '';
                         $total_peso = '';
                         $msg_pedido = '';
+                        $pedido_prev_ent = '';
                         $query2 = "SELECT cliente_tipo, cpf_cnpj, bairro, cidade, uf, total_volumes, total_peso, msg_pedido, msg_nota, pedido_prev_ent 
                                         FROM `md_vendas_pedidos` 
                                         WHERE id = $pedido->numeroPedidoCompra";
@@ -330,6 +336,12 @@ while ($bling_api_cod_erro == 0) {
                                 $pedido_prev_ent = $campos['pedido_prev_ent'];
                             }
                         }
+
+                        // if ($pedido->contato->nome == 'PRODUÇÃO ESTOQUE') {
+                        //     $pedido_prev_ent = '2050-12-31';
+                        // }
+
+                        $pedido_prev_ent = $pedido_prev_ent != '' ? $pedido_prev_ent : $pedido->dataPrevista;
 
                         $pedido_vendas_array_api[] = array(
 
@@ -389,7 +401,7 @@ function sortArray($array)
 
 
 $pedido_vendas_array = sortArray($pedido_vendas_array_api);
-// print("<pre>" . print_r($pedido_vendas_array, true) . "</pre>");
+print("<pre>" . print_r($pedido_vendas_array, true) . "</pre>");
 
 //fim do cronometro
 $fim_pv_get = microtime(true);

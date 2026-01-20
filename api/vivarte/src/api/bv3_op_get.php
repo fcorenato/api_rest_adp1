@@ -93,7 +93,8 @@ while ($bling_api_cod_erro == 0) {
                             'op_qtde' => $op_qtde,
                             'op_qtde_atu' => $op_qtde,
                             'op_previsaoFinal' => date("d/m/Y", strtotime($dataPrevisaoFinal)),
-                            'deposito_destino' => $deposito_dest
+                            'deposito_destino' => $deposito_dest,
+                            'observacoes' => $resultado2->data->observacoes
                         );
                     }
                 }
@@ -194,7 +195,8 @@ while ($bling_api_cod_erro == 0) {
                             'op_qtde' => $op_qtde,
                             'op_qtde_atu' => $op_qtde,
                             'op_previsaoFinal' => date("d/m/Y", strtotime($dataPrevisaoFinal)),
-                            'deposito_destino' => $deposito_dest
+                            'deposito_destino' => $deposito_dest,
+                            'observacoes' => $resultado2->data->observacoes
                         );
                     }
                 }
@@ -235,7 +237,7 @@ function ordenarDataCrescente($a, $b)
 usort($op_array_api, 'ordenarDataCrescente');
 $op_array = $op_array_api;
 
-// print("<pre>" . print_r($op_array, true) . "</pre>");
+print("<pre>" . print_r(json_encode($op_array), true) . "</pre>"); 
 //fim do cronometro
 $fim_op_get = microtime(true);
 $tempoExecucao_op_get = $fim_op_get - $inicio_op_get;
