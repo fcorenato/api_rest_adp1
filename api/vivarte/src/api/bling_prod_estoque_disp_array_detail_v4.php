@@ -3,7 +3,7 @@
 $inicio2 = microtime(true);
 
 date_default_timezone_set('America/Sao_Paulo');
-require('../config/conexao_dev.php');
+require('../config/conexao.php');
 include_once('../../sys_functions.php');
 
 // ============== AJAX CARTEIRA ==============================================
@@ -591,9 +591,12 @@ if ($processar_carteira) {
         //print("<pre>" . print_r($pedido_vendas_array, true) . "</pre>");
 
         // percorrendo array pedidos ja processado
-        require('../config/conexao_dev.php');
+        require('../config/conexao.php');
 
-        $limpa_tabela = mysql_query("TRUNCATE md_vendas_carteira") or die(mysql_error());
+        // $limpa_tabela = mysql_query("TRUNCATE md_vendas_carteira") or die(mysql_error());
+
+        //limpado dado de atualizacao dos itens na tabela carteira
+        $limpa_tabela = mysql_query("UPDATE md_vendas_carteira SET updated_at= NULL WHERE situacao NOT IN ('FATURADO','CANCELADO')") or die(mysql_error());
 
         foreach ($pedido_vendas_array as $key_ped => $value_ped) {
             // ================  Subtotal por Pedido   ============================
@@ -705,37 +708,78 @@ if ($processar_carteira) {
                 //inserindo itens na tabela md_vendas_carteira
                 $sql = "
                 INSERT INTO md_vendas_carteira (
-                ud, ped_bling, orc_biv, nome_cliente, emissao, entrega, cond_pgto, valor_rs_com_ipi, produto, qtde_pedido, est_sugest, op_sugest, pc_sugest, qtde_pend, situacao, situacao_color,  data_prev, doc, saldo_est, tipo_cli, uf, cidade, bairro, volume, peso_bruto, frete, msg_nota, obs_ped_cli) VALUES (
-                '" . mysql_real_escape_string($ud_array[$value_ped['ped_ud']]) . "',
-                '" . mysql_real_escape_string($value_ped['ped_num']) . "',
-                '" . mysql_real_escape_string($value_ped['ped_web_num']) . "',
-                '" . mysql_real_escape_string($value_ped['cliente_nome']) . "',
-                '" . mysql_real_escape_string($value_ped['ped_emissao']) . "',
-                '" . mysql_real_escape_string($ped_data_prev) . "',
-                '" . mysql_real_escape_string($value_ped['cond_pgto']) . "',
-                '" . mysql_real_escape_string($item_valor_cipi) . "',
-                '" . mysql_real_escape_string($value_ped['item_ref']) . "',
-                '" . mysql_real_escape_string($value_ped['item_qtde']) . "',
-                '" . mysql_real_escape_string($value_ped['est_sugest']) . "',
-                '" . mysql_real_escape_string($value_ped['op_sugest']) . "',
-                '" . mysql_real_escape_string($value_ped['pc_sugest']) . "',
-                '" . mysql_real_escape_string($value_ped['qtde_pend']) . "',
-                '" . mysql_real_escape_string($value_ped['situacao']) . "',
-                '" . mysql_real_escape_string($value_ped['situacao_color']) . "',
-                '" . mysql_real_escape_string($value_ped['data_prev']) . "',
-                '" . mysql_real_escape_string($value_ped['doc']) . "',
-                '" . mysql_real_escape_string($value_ped['saldo_est']) . "',
-                '" . mysql_real_escape_string($value_ped['cliente_tipo']) . "',
-                '" . mysql_real_escape_string($value_ped['cliente_uf']) . "',
-                '" . mysql_real_escape_string($value_ped['cliente_cidade']) . "',
-                '" . mysql_real_escape_string($value_ped['cliente_bairro']) . "',
-                '" . mysql_real_escape_string($value_ped['item_volume']) . "',
-                '" . mysql_real_escape_string($peso_item) . "',
-                '" . mysql_real_escape_string('0') . "',
-                '" . mysql_real_escape_string('0') . "',
-                '" . mysql_real_escape_string('0') . "'
-                )";
-                echo '<hr> Inserindo item na carteira: ' . $sql . '<hr>';
+                    pv_id, item_pv_id, bling_emp, ud, ped_bling, orc_biv, nome_cliente, emissao, entrega, cond_pgto,
+                    valor_rs_com_ipi, produto, qtde_pedido, est_sugest, op_sugest,
+                    pc_sugest, qtde_pend, situacao, situacao_color, data_prev, doc,
+                    saldo_est, tipo_cli, uf, cidade, bairro, volume, peso_bruto,
+                    frete, msg_nota, obs_ped_cli, created_at, updated_at 
+                ) VALUES (
+                    '" . mysql_real_escape_string($value_ped['ped_id']) . "',
+                    '" . mysql_real_escape_string($value_ped['item_pv_id']) . "',
+                    '" . mysql_real_escape_string($value_ped['bling_emp']) . "',
+                    '" . mysql_real_escape_string($ud_array[$value_ped['ped_ud']]) . "',
+                    '" . mysql_real_escape_string($value_ped['ped_num']) . "',
+                    '" . mysql_real_escape_string($value_ped['ped_web_num']) . "',
+                    '" . mysql_real_escape_string($value_ped['cliente_nome']) . "',
+                    '" . mysql_real_escape_string($value_ped['ped_emissao']) . "',
+                    '" . mysql_real_escape_string($ped_data_prev) . "',
+                    '" . mysql_real_escape_string($value_ped['cond_pgto']) . "',
+                    '" . mysql_real_escape_string($item_valor_cipi) . "',
+                    '" . mysql_real_escape_string($value_ped['item_ref']) . "',
+                    '" . mysql_real_escape_string($value_ped['item_qtde']) . "',
+                    '" . mysql_real_escape_string($value_ped['est_sugest']) . "',
+                    '" . mysql_real_escape_string($value_ped['op_sugest']) . "',
+                    '" . mysql_real_escape_string($value_ped['pc_sugest']) . "',
+                    '" . mysql_real_escape_string($value_ped['qtde_pend']) . "',
+                    '" . mysql_real_escape_string($value_ped['situacao']) . "',
+                    '" . mysql_real_escape_string($value_ped['situacao_color']) . "',
+                    '" . mysql_real_escape_string($value_ped['data_prev']) . "',
+                    '" . mysql_real_escape_string($value_ped['doc']) . "',
+                    '" . mysql_real_escape_string($value_ped['saldo_est']) . "',
+                    '" . mysql_real_escape_string($value_ped['cliente_tipo']) . "',
+                    '" . mysql_real_escape_string($value_ped['cliente_uf']) . "',
+                    '" . mysql_real_escape_string($value_ped['cliente_cidade']) . "',
+                    '" . mysql_real_escape_string($value_ped['cliente_bairro']) . "',
+                    '" . mysql_real_escape_string($value_ped['item_volume']) . "',
+                    '" . mysql_real_escape_string($peso_item) . "',
+                    '0',
+                    '',
+                    '',
+                    '" . date("Y-m-d H:i:s") . "',
+                    '" . date("Y-m-d H:i:s")  . "'
+                )
+                ON DUPLICATE KEY UPDATE
+                    ud                = VALUES(ud),
+                    nome_cliente      = VALUES(nome_cliente),
+                    emissao           = VALUES(emissao),
+                    entrega           = VALUES(entrega),
+                    cond_pgto         = VALUES(cond_pgto),
+                    valor_rs_com_ipi  = VALUES(valor_rs_com_ipi),
+                    produto           = VALUES(produto),
+                    qtde_pedido       = VALUES(qtde_pedido),
+                    est_sugest        = VALUES(est_sugest),
+                    op_sugest         = VALUES(op_sugest),
+                    pc_sugest         = VALUES(pc_sugest),
+                    qtde_pend         = VALUES(qtde_pend),
+                    situacao          = VALUES(situacao),
+                    situacao_color    = VALUES(situacao_color),
+                    data_prev         = VALUES(data_prev),
+                    doc               = VALUES(doc),
+                    saldo_est         = VALUES(saldo_est),
+                    tipo_cli          = VALUES(tipo_cli),
+                    uf                = VALUES(uf),
+                    cidade            = VALUES(cidade),
+                    bairro            = VALUES(bairro),
+                    volume            = VALUES(volume),
+                    peso_bruto        = VALUES(peso_bruto),
+                    frete             = VALUES(frete),
+                    msg_nota          = VALUES(msg_nota),
+                    obs_ped_cli       = VALUES(obs_ped_cli),
+                    updated_at        = VALUES(updated_at)
+                ";
+
+                echo '<hr>inserindou ou atualiznado carteira: <br>' . $sql . '<hr>';
+
                 $result = mysql_query($sql);
 
                 if (!$result) {
@@ -1353,7 +1397,7 @@ $carteira_processada = str_replace("'", "", $carteira_processada);
 $update_at = date("Y-m-d H:i:s");
 // salvar relatorio processado ===================================================
 
-include('../config/conexao_dev.php');
+include('../config/conexao.php');
 $limpa_tabela = mysql_query("TRUNCATE md_vendas_carteira_rel") or die(mysql_error());
 $query_rel_cart = "INSERT INTO `md_vendas_carteira_rel` (`id`, `conteudo`, `create_at`) VALUES ('1', '$carteira_processada', '$update_at');";
 // echo '<hr>' . $query_rel_cart . '<hr>';
@@ -1363,7 +1407,7 @@ $result = mysql_query($query_rel_cart) or die(mysql_error());
 $atualiza_estoque_biv = TRUE;
 if ($atualiza_estoque_biv) {
 
-    include('../config/conexao_dev.php');
+    include('../config/conexao.php');
     $limpa_tabela = mysql_query("TRUNCATE md_estoque_disponivel_detail;") or die(mysql_error());
 
     //ESTOQUE
@@ -1562,6 +1606,10 @@ echo '<br>';
 $query_rel_cart2 = "INSERT INTO `md_vendas_carteira_rel` (`id`, `conteudo`, `create_at`) VALUES ('2', '$relatorio_prog', '$update_at');";
 // echo '<hr>' . $query_rel_cart . '<hr>';
 $result2 = mysql_query($query_rel_cart2) or die(mysql_error());
+
+
+//VERIFICANDO ITENS NÃO ATUALIZADOS
+include_once('../../src/api/bv3_pv_status_get.php');
 
 echo 'fim';
 //fim do cronometro

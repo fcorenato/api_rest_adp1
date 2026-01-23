@@ -156,7 +156,9 @@ while ($bling_api_cod_erro == 0) {
 
                         $pedido_vendas_array_api[] = array(
 
+                            'bling_emp' => "VIVARTE",
                             'ped_ud' => $pedido->loja->id,
+                            'ped_id' => $pedido->id,
                             'ped_num' => $pedido->numero,
                             'ped_web_num' => $pedido->numeroPedidoCompra,
                             'ped_situacao' => $pedido->situacao->id,
@@ -165,6 +167,7 @@ while ($bling_api_cod_erro == 0) {
                             'ped_valorfrete' => $pedido->transporte->frete,
                             'cond_pgto' => $pedido->parcelas[0]->observacoes,
                             'item_valor' => $total_item,
+                            'item_pv_id' => trim($item->id),
                             'item_ref' => trim($item->codigo),
                             'item_qtde' => $item->quantidade,
                             'item_pesobruto' => $total_peso,
@@ -218,8 +221,7 @@ while ($bling_api_cod_erro == 0) {
     24	Verificado
     10928	Amostras e Bonificações
     */
-
-
+    
     $url = "https://api.bling.com.br/Api/v3/pedidos/vendas?pagina=$api_pagina&idsSituacoes[]=6&idsSituacoes[]=15&idsSituacoes[]=10928";
 
     // echo $url . '<hr>';
@@ -344,8 +346,9 @@ while ($bling_api_cod_erro == 0) {
                         $pedido_prev_ent = $pedido_prev_ent != '' ? $pedido_prev_ent : $pedido->dataPrevista;
 
                         $pedido_vendas_array_api[] = array(
-
+                            'bling_emp' => "AGAS",
                             'ped_ud' => $pedido->loja->id,
+                            'ped_id' => $pedido->id,
                             'ped_num' => $pedido->numero,
                             'ped_web_num' => $pedido->numeroPedidoCompra,
                             'ped_situacao' => $pedido->situacao->id,
@@ -354,6 +357,7 @@ while ($bling_api_cod_erro == 0) {
                             'ped_valorfrete' => $pedido->transporte->frete,
                             'cond_pgto' => $pedido->parcelas[0]->observacoes,
                             'item_valor' => $total_item,
+                            'item_pv_id' => trim($item->id),
                             'item_ref' => trim($item->codigo),
                             'item_qtde' => $item->quantidade,
                             'item_pesobruto' => $total_peso,
