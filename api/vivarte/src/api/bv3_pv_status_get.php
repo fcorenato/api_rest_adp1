@@ -26,7 +26,7 @@ foreach ($array_pvs as $pv_id => $bling_emp) {
         include('bv3_get_token_agas.php');
     }
 
-    echo 'Usando token: ' . substr($token, 0, 20) . '...<br>';
+    // echo 'Usando token: ' . substr($token, 0, 20) . '...<br>';
 
     //buscar produtos do pedido de venda:
     //inicializando CURL =================================================================

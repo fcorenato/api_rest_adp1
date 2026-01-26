@@ -227,32 +227,13 @@ if ($processar_carteira) {
         }
         // print("<pre>" . print_r($venda_prod_array, true) . "</pre>");
 
-
         //percorrendo array de pedidos para processar atendimento com estoque, OP e PC
         foreach ($pedido_vendas_array as $key_ped => $value_ped) {
-
-            /*
-            // se produto vetromani ou vivarte checar se entrear maior que 60 dias
-            if (trim($campos['B1_FABRIC']) == 'VETROMANI' || trim($campos['B1_FABRIC']) == 'VIVARTE') {
-
-                $time_inicial = geraTimestamp(date('d/m/Y'));
-                $time_final = geraTimestamp($data_entrega);
-                // Calcula a diferença de segundos entre as duas datas:
-                $diferenca = $time_final - $time_inicial; // 19522800 segundos
-                // Calcula a diferença de dias
-                $dias_p_atender = (int)floor($diferenca / (60 * 60 * 24)); // 225 dias
-                if ($dias_p_atender >= 60) {
-                    $atender_pedidovenda = FALSE; // se maior que 60 nao atender
-                } else {
-                    $atender_pedidovenda = TRUE;
-                }
-            }
-            */
             $atender_pedidovenda = TRUE;
 
             //=== Veirifando (1)Estoque Disponivel, (2)OP e (3)Ped de Compras para atender itens pendentes ====
 
-            $qtde_atender = round($value_ped['item_qtde'], 2);
+            $qtde_atender = round($value_ped['qtde_pend'], 2);
             $qtde_pendente_pv = $qtde_atender;
             $qtde_sugerida_estoque = 0;
             $destacar_estoque = '';
@@ -281,7 +262,7 @@ if ($processar_carteira) {
                             //se encontrar o pedido na obs
                             if (in_array($numero_pedido, $array_pedidos)) {
 
-                                
+
 
                                 echo '<br>Achou Pedido ' . $numero_pedido . ' na Obs da OP ' . $value_op['op_num'] . ' = ' . $obs . ' - Array pedidos: ' . print_r($array_pedidos, true) . '<br>';
 
@@ -340,181 +321,6 @@ if ($processar_carteira) {
 
 
 
-            //  =============== (1) Verificando no estoque disponivel  ============
-
-
-            if ($qtde_pendente_pv > 0 and $atender_pedidovenda) {
-                $destacar_estoque = '';
-                $saldo_disp_atu_item_corrent = 0;
-                $dep_est_atende = '';
-
-                if ($atender_parcial_estoque) {
-                    foreach ($estoquedisp as $key_estoq => $value_estoq) {
-                        if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] > 0 and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET')) {
-                            $saldo_disp_atu_item_corrent_calc1 = round($value_estoq['saldo_disp_atu'], 2) - $qtde_pendente_pv;
-                            $qtde_sugerida_item_atual = 0;
-                            //nao deixar saldo ficar negativo
-                            if ($saldo_disp_atu_item_corrent_calc1 < 0) {
-                                $saldo_disp_atu_item_corrent = 0;
-                                $qtde_pendente_pv = $qtde_pendente_pv - round($value_estoq['saldo_disp_atu'], 2);
-                                $qtde_sugerida_estoque += round($value_estoq['saldo_disp_atu'], 2);
-                                $qtde_sugerida_item_atual = round($value_estoq['saldo_disp_atu'], 2);
-                            } else {
-                                $saldo_disp_atu_item_corrent = $saldo_disp_atu_item_corrent_calc1;
-                                $qtde_sugerida_estoque += $qtde_pendente_pv;
-                                $qtde_sugerida_item_atual += $qtde_pendente_pv;
-                                $qtde_pendente_pv = 0;
-                            }
-
-                            $estoquedisp[$key_estoq]['saldo_disp_atu'] = $saldo_disp_atu_item_corrent;
-
-
-                            $destacar_estoque = 'style="background-color: LightGreen;"';
-                            $dep_est_atende .= $estoquedisp[$key_estoq]['deposito'] . ' (' . number_format($qtde_sugerida_item_atual,    2, ',', '.') . ') ';
-                        }
-                    }
-                } else {
-                    foreach ($estoquedisp as $key_estoq => $value_estoq) {
-                        if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] >= $qtde_pendente_pv and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET')) {
-                            $estoquedisp[$key_estoq]['saldo_disp_atu'] = round($value_estoq['saldo_disp_atu'], 2) - $qtde_pendente_pv;
-                            $saldo_disp_atu_item_corrent = round($value_estoq['saldo_disp_atu'], 2) - $qtde_pendente_pv;
-                            $qtde_sugerida_estoque = $qtde_pendente_pv;
-                            $qtde_pendente_pv = 0;
-                            $destacar_estoque = 'style="background-color: LightGreen;"';
-                            $dep_est_atende = $estoquedisp[$key_estoq]['deposito'];
-                        }
-                    }
-                }
-            }
-
-            $pedido_vendas_array[$key_ped]['est_sugest'] = $qtde_sugerida_estoque;
-            // ======== fim do  1 - Verificando no estoque disponivel  =======
-
-            //  =============== (2) Verificando OPs  ============
-
-            // $qtde_sugerida_op = 0;
-            // $destacar_op = '';
-            // $data_prev_op = '';
-            // $item_doc_atend_op = '';
-            // $item_data_prev_op = '';
-
-            if ($qtde_pendente_pv > 0 and $consulta_op and $atender_pedidovenda) {
-                if ($atender_parcial_op) {
-                    foreach ($op_array as $key_op => $value_op) {
-                        if ($value_op['op_ref'] == $value_ped['item_ref']  and $qtde_pendente_pv > 0 and $value_op['op_qtde_atu'] > 0) {
-                            $qtde_sugerida_op_item_atual = 0;
-                            $saldo_disp_atu_item_corrent_calc1 = round($value_op['op_qtde_atu'], 2) - $qtde_pendente_pv;
-                            if ($saldo_disp_atu_item_corrent_calc1 < 0) {
-                                $saldo_disp_atu_item_corrent = 0;
-                                $qtde_pendente_pv = $qtde_pendente_pv - round($value_op['op_qtde_atu'], 2);
-                                $qtde_sugerida_op += round($value_op['op_qtde_atu'], 2);
-                                $qtde_sugerida_op_item_atual = round($value_op['op_qtde_atu'], 2);
-                            } else {
-                                $saldo_disp_atu_item_corrent = $saldo_disp_atu_item_corrent_calc1;
-                                $qtde_sugerida_op += $qtde_pendente_pv;
-                                $qtde_sugerida_op_item_atual = $qtde_pendente_pv;
-                                $qtde_pendente_pv = 0;
-                            }
-
-                            $op_array[$key_op]['op_qtde_atu'] = $saldo_disp_atu_item_corrent;
-
-                            $destacar_op = 'style="background-color: LightGreen;"';
-                            $item_data_prev_op .= substr($value_op['op_previsaoFinal'], 0, 10) . ' ';
-                            $item_doc_atend_op .= 'OP:' . $value_op['op_num'] . ' (' . number_format($qtde_sugerida_op_item_atual,    2, ',', '.') . ') ';
-                        }
-                    }
-                } else {
-                    foreach ($op_array as $key_op => $value_op) {
-                        if ($value_op['op_ref'] == $value_ped['item_ref']  and $qtde_pendente_pv > 0 and $value_op['op_qtde_atu'] >= $qtde_pendente_pv) {
-                            $op_array[$key_op]['op_qtde_atu'] = round($value_op['op_qtde_atu'], 2) - $qtde_pendente_pv;
-                            $saldo_disp_atu_item_corrent = round($value_op['op_qtde_atu'], 2) - $qtde_pendente_pv;
-                            $qtde_sugerida_op = $qtde_pendente_pv;
-                            $qtde_pendente_pv = 0;
-                            $destacar_op = 'style="background-color: LightGreen;"';
-                            $item_data_prev_op = substr($value_op['op_previsaoFinal'], 0, 10);
-                            $item_doc_atend_op = 'OP:' . $value_op['op_num'];
-                        }
-                    }
-                }
-            }
-            $pedido_vendas_array[$key_ped]['op_sugest'] = $qtde_sugerida_op;
-
-            // ======== fim do  2 - Verificando Ops  ==========
-
-            //  =============== (3) Verificando Pedidos de Compra  ============
-            $qtde_sugerida_pc = 0;
-            $destacar_pc = '';
-            $data_prev_pc = '';
-            $item_doc_atend_pc = '';
-            $item_data_prev_pc = '';
-
-            if ($qtde_pendente_pv > 0 and $consulta_pc and $atender_pedidovenda) {
-                if ($atender_parcial_pc) {
-                    foreach ($pc_array as $key_pc => $value_pc) {
-                        if ($value_pc['pc_ref'] == $value_ped['item_ref']  and $qtde_pendente_pv > 0 and $value_pc['pc_qtde_atu'] > 0) {
-
-                            //se pedido de compra é complementar para pedido especifico
-                            $ped_complementar = 0;
-                            $atende_com_pc = TRUE;
-                            $ped_complementar = strlen($value_pc['pc_ordemcompra']);
-
-                            unset($pc_ordemcompra_array);
-                            $pc_ordemcompra_array = explode(",", TRIM($value_pc['pc_ordemcompra']));
-
-                            //print("<pre>" . print_r($pc_ordemcompra_array, true) . "</pre>");
-                            //echo strlen($value_pc['pc_ordemcompra']);
-                            if ($ped_complementar) {
-                                if (in_array(TRIM($value_ped['ped_num']), $pc_ordemcompra_array)) {
-                                    $atende_com_pc = TRUE;
-                                } else {
-                                    $atende_com_pc = FALSE;
-                                }
-                            } else {
-                                $atende_com_pc = TRUE;
-                            }
-
-
-                            if ($atende_com_pc) {
-                                $saldo_disp_atu_item_corrent_calc1 = round($value_pc['pc_qtde_atu'], 2) - $qtde_pendente_pv;
-                                if ($saldo_disp_atu_item_corrent_calc1 < 0) {
-                                    $saldo_disp_atu_item_corrent = 0;
-                                    $qtde_pendente_pv = $qtde_pendente_pv - round($value_pc['pc_qtde_atu'], 2);
-                                    $qtde_sugerida_pc += round($value_pc['pc_qtde_atu'], 2);
-                                } else {
-                                    $saldo_disp_atu_item_corrent = $saldo_disp_atu_item_corrent_calc1;
-                                    $qtde_sugerida_pc += $qtde_pendente_pv;
-                                    $qtde_pendente_pv = 0;
-                                }
-
-                                $pc_array[$key_pc]['pc_qtde_atu'] = $saldo_disp_atu_item_corrent;
-
-                                $destacar_pc = 'style="background-color: LightGreen;"';
-                                $item_data_prev_pc .= $value_pc['pc_previsao'] . ' ';
-                                $item_doc_atend_pc .= 'PC:' . $value_pc['pc_num'] . ' ';
-                            }
-                        }
-                    }
-                } else {
-                    foreach ($pc_array as $key_pc => $value_pc) {
-                        if ($value_pc['pc_ref'] == $value_ped['item_ref']  and $qtde_pendente_pv > 0 and $value_pc['pc_qtde_atu'] >= $qtde_pendente_pv) {
-                            $pc_array[$key_pc]['pc_qtde_atu'] = round($value_pc['pc_qtde_atu'], 2) - $qtde_pendente_pv;
-                            $saldo_disp_atu_item_corrent = round($value_pc['pc_qtde_atu'], 2) - $qtde_pendente_pv;
-                            $qtde_sugerida_pc = $qtde_pendente_pv;
-                            $qtde_pendente_pv = 0;
-                            $destacar_pc = 'style="background-color: LightGreen;"';
-                            $item_data_prev_pc = $value_pc['pc_previsao'] . ' ';
-                            $item_doc_atend_pc = 'PC:' . $value_pc['pc_num'];
-                        }
-                    }
-                }
-            }
-
-            $pedido_vendas_array[$key_ped]['pc_sugest'] = $qtde_sugerida_pc;
-
-
-
-            // ======== fim do  3 - Verificando Pedidos de Compra ==========
-
             //verificando status do item
             $ped_item_status = '';
             $ped_item_status_color = 'style=""';
@@ -550,6 +356,248 @@ if ($processar_carteira) {
             $pedido_vendas_array[$key_ped]['doc'] = $dep_est_atende . $item_doc_atend_op . $item_doc_atend_pc;
             $pedido_vendas_array[$key_ped]['saldo_est'] = $saldo_disp_atu_item_corrent;
         } // fim do foreach pedidos
+
+        //FOREACH2 PEDIDOS 
+        echo "FOREACH2 ======================<br>";
+        print("<pre>" . print_r($pedido_vendas_array, true) . "</pre>");
+        //percorrendo array de pedidos para processar atendimento com estoque, OP e PC
+        foreach ($pedido_vendas_array as $key_ped => $value_ped) {
+            $atender_pedidovenda = TRUE;
+            $qtde_atender = round($value_ped['qtde_pend'], 2);
+            $qtde_pendente_pv = $qtde_atender;
+
+            if ($qtde_pendente_pv > 0) {
+
+
+                //=== Veirifando (1)Estoque Disponivel, (2)OP e (3)Ped de Compras para atender itens pendentes ====
+
+
+                $qtde_sugerida_estoque = round($value_ped['est_sugest'], 2);;
+                $destacar_estoque = '';
+                $destacar_op = '';
+                $destacar_pc = '';
+
+
+
+                //  =============== (1) Verificando no estoque disponivel  ============
+
+
+                if ($qtde_pendente_pv > 0 and $atender_pedidovenda) {
+                    echo "<br>Verificando estoque para pedido: " . $value_ped['ped_num'] . " ref: " . $value_ped['item_ref'] . " - qtde pendente: $qtde_pendente_pv <br>";
+
+                    $destacar_estoque = '';
+                    $saldo_disp_atu_item_corrent = 0;
+                    $dep_est_atende = '';
+
+                    if ($atender_parcial_estoque) {
+                        foreach ($estoquedisp as $key_estoq => $value_estoq) {
+                            if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] > 0 and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET')) {
+                                $saldo_disp_atu_item_corrent_calc1 = round($value_estoq['saldo_disp_atu'], 2) - $qtde_pendente_pv;
+                                $qtde_sugerida_item_atual = 0;
+                                //nao deixar saldo ficar negativo
+                                if ($saldo_disp_atu_item_corrent_calc1 < 0) {
+                                    $saldo_disp_atu_item_corrent = 0;
+                                    $qtde_pendente_pv = $qtde_pendente_pv - round($value_estoq['saldo_disp_atu'], 2);
+                                    $qtde_sugerida_estoque += round($value_estoq['saldo_disp_atu'], 2);
+                                    $qtde_sugerida_item_atual = round($value_estoq['saldo_disp_atu'], 2);
+                                } else {
+                                    $saldo_disp_atu_item_corrent = $saldo_disp_atu_item_corrent_calc1;
+                                    $qtde_sugerida_estoque += $qtde_pendente_pv;
+                                    $qtde_sugerida_item_atual += $qtde_pendente_pv;
+                                    $qtde_pendente_pv = 0;
+                                }
+
+                                $estoquedisp[$key_estoq]['saldo_disp_atu'] = $saldo_disp_atu_item_corrent;
+
+
+                                $destacar_estoque = 'style="background-color: LightGreen;"';
+                                $dep_est_atende .= $estoquedisp[$key_estoq]['deposito'] . ' (' . number_format($qtde_sugerida_item_atual,    2, ',', '.') . ') ';
+                            }
+                        }
+                    } else {
+                        foreach ($estoquedisp as $key_estoq => $value_estoq) {
+                            if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] >= $qtde_pendente_pv and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET')) {
+                                $estoquedisp[$key_estoq]['saldo_disp_atu'] = round($value_estoq['saldo_disp_atu'], 2) - $qtde_pendente_pv;
+                                $saldo_disp_atu_item_corrent = round($value_estoq['saldo_disp_atu'], 2) - $qtde_pendente_pv;
+                                $qtde_sugerida_estoque = $qtde_pendente_pv;
+                                $qtde_pendente_pv = 0;
+                                $destacar_estoque = 'style="background-color: LightGreen;"';
+                                $dep_est_atende = $estoquedisp[$key_estoq]['deposito'];
+                            }
+                        }
+                    }
+                }
+
+                $pedido_vendas_array[$key_ped]['est_sugest'] = $qtde_sugerida_estoque;
+                // ======== fim do  1 - Verificando no estoque disponivel  =======
+
+                //  =============== (2) Verificando OPs  ============
+
+                $qtde_sugerida_op = 0;
+                $destacar_op = '';
+                $data_prev_op = '';
+                $item_doc_atend_op = '';
+                $item_data_prev_op = '';
+
+                if ($qtde_pendente_pv > 0 and $consulta_op and $atender_pedidovenda) {
+                    echo "<br>Verificando OP para pedido: " . $value_ped['ped_num'] . " ref: " . $value_ped['item_ref'] . " - qtde pendente: $qtde_pendente_pv <br>";
+
+                    if ($atender_parcial_op) {
+                        foreach ($op_array as $key_op => $value_op) {
+                            if ($value_op['op_ref'] == $value_ped['item_ref']  and $qtde_pendente_pv > 0 and $value_op['op_qtde_atu'] > 0) {
+                                $qtde_sugerida_op_item_atual = 0;
+                                $saldo_disp_atu_item_corrent_calc1 = round($value_op['op_qtde_atu'], 2) - $qtde_pendente_pv;
+                                if ($saldo_disp_atu_item_corrent_calc1 < 0) {
+                                    $saldo_disp_atu_item_corrent = 0;
+                                    $qtde_pendente_pv = $qtde_pendente_pv - round($value_op['op_qtde_atu'], 2);
+                                    $qtde_sugerida_op += round($value_op['op_qtde_atu'], 2);
+                                    $qtde_sugerida_op_item_atual = round($value_op['op_qtde_atu'], 2);
+                                } else {
+                                    $saldo_disp_atu_item_corrent = $saldo_disp_atu_item_corrent_calc1;
+                                    $qtde_sugerida_op += $qtde_pendente_pv;
+                                    $qtde_sugerida_op_item_atual = $qtde_pendente_pv;
+                                    $qtde_pendente_pv = 0;
+                                }
+
+                                $op_array[$key_op]['op_qtde_atu'] = $saldo_disp_atu_item_corrent;
+
+                                $destacar_op = 'style="background-color: LightGreen;"';
+                                $item_data_prev_op .= substr($value_op['op_previsaoFinal'], 0, 10) . ' ';
+                                $item_doc_atend_op .= 'OP:' . $value_op['op_num'] . ' (' . number_format($qtde_sugerida_op_item_atual,    2, ',', '.') . ') ';
+                            }
+                        }
+                    } else {
+                        foreach ($op_array as $key_op => $value_op) {
+                            if ($value_op['op_ref'] == $value_ped['item_ref']  and $qtde_pendente_pv > 0 and $value_op['op_qtde_atu'] >= $qtde_pendente_pv) {
+                                $op_array[$key_op]['op_qtde_atu'] = round($value_op['op_qtde_atu'], 2) - $qtde_pendente_pv;
+                                $saldo_disp_atu_item_corrent = round($value_op['op_qtde_atu'], 2) - $qtde_pendente_pv;
+                                $qtde_sugerida_op = $qtde_pendente_pv;
+                                $qtde_pendente_pv = 0;
+                                $destacar_op = 'style="background-color: LightGreen;"';
+                                $item_data_prev_op = substr($value_op['op_previsaoFinal'], 0, 10);
+                                $item_doc_atend_op = 'OP:' . $value_op['op_num'];
+                            }
+                        }
+                    }
+                }
+                $pedido_vendas_array[$key_ped]['op_sugest'] = $qtde_sugerida_op;
+
+                // ======== fim do  2 - Verificando Ops  ==========
+
+                //  =============== (3) Verificando Pedidos de Compra  ============
+                $qtde_sugerida_pc = 0;
+                $destacar_pc = '';
+                $data_prev_pc = '';
+                $item_doc_atend_pc = '';
+                $item_data_prev_pc = '';
+
+                if ($qtde_pendente_pv > 0 and $consulta_pc and $atender_pedidovenda) {
+                    echo "<br>Verificando PC para pedido: " . $value_ped['ped_num'] . " ref: " . $value_ped['item_ref'] . " - qtde pendente: $qtde_pendente_pv <br>";
+                    if ($atender_parcial_pc) {
+                        foreach ($pc_array as $key_pc => $value_pc) {
+                            if ($value_pc['pc_ref'] == $value_ped['item_ref']  and $qtde_pendente_pv > 0 and $value_pc['pc_qtde_atu'] > 0) {
+
+                                //se pedido de compra é complementar para pedido especifico
+                                $ped_complementar = 0;
+                                $atende_com_pc = TRUE;
+                                $ped_complementar = strlen($value_pc['pc_ordemcompra']);
+
+                                unset($pc_ordemcompra_array);
+                                $pc_ordemcompra_array = explode(",", TRIM($value_pc['pc_ordemcompra']));
+
+                                //print("<pre>" . print_r($pc_ordemcompra_array, true) . "</pre>");
+                                //echo strlen($value_pc['pc_ordemcompra']);
+                                if ($ped_complementar) {
+                                    if (in_array(TRIM($value_ped['ped_num']), $pc_ordemcompra_array)) {
+                                        $atende_com_pc = TRUE;
+                                    } else {
+                                        $atende_com_pc = FALSE;
+                                    }
+                                } else {
+                                    $atende_com_pc = TRUE;
+                                }
+
+
+                                if ($atende_com_pc) {
+                                    $saldo_disp_atu_item_corrent_calc1 = round($value_pc['pc_qtde_atu'], 2) - $qtde_pendente_pv;
+                                    if ($saldo_disp_atu_item_corrent_calc1 < 0) {
+                                        $saldo_disp_atu_item_corrent = 0;
+                                        $qtde_pendente_pv = $qtde_pendente_pv - round($value_pc['pc_qtde_atu'], 2);
+                                        $qtde_sugerida_pc += round($value_pc['pc_qtde_atu'], 2);
+                                    } else {
+                                        $saldo_disp_atu_item_corrent = $saldo_disp_atu_item_corrent_calc1;
+                                        $qtde_sugerida_pc += $qtde_pendente_pv;
+                                        $qtde_pendente_pv = 0;
+                                    }
+
+                                    $pc_array[$key_pc]['pc_qtde_atu'] = $saldo_disp_atu_item_corrent;
+
+                                    $destacar_pc = 'style="background-color: LightGreen;"';
+                                    $item_data_prev_pc .= $value_pc['pc_previsao'] . ' ';
+                                    $item_doc_atend_pc .= 'PC:' . $value_pc['pc_num'] . ' ';
+                                }
+                            }
+                        }
+                    } else {
+                        foreach ($pc_array as $key_pc => $value_pc) {
+                            if ($value_pc['pc_ref'] == $value_ped['item_ref']  and $qtde_pendente_pv > 0 and $value_pc['pc_qtde_atu'] >= $qtde_pendente_pv) {
+                                $pc_array[$key_pc]['pc_qtde_atu'] = round($value_pc['pc_qtde_atu'], 2) - $qtde_pendente_pv;
+                                $saldo_disp_atu_item_corrent = round($value_pc['pc_qtde_atu'], 2) - $qtde_pendente_pv;
+                                $qtde_sugerida_pc = $qtde_pendente_pv;
+                                $qtde_pendente_pv = 0;
+                                $destacar_pc = 'style="background-color: LightGreen;"';
+                                $item_data_prev_pc = $value_pc['pc_previsao'] . ' ';
+                                $item_doc_atend_pc = 'PC:' . $value_pc['pc_num'];
+                            }
+                        }
+                    }
+                }
+
+                $pedido_vendas_array[$key_ped]['pc_sugest'] = $qtde_sugerida_pc;
+
+
+
+                // ======== fim do  3 - Verificando Pedidos de Compra ==========
+
+                //verificando status do item
+                $ped_item_status = '';
+                $ped_item_status_color = 'style=""';
+
+                if ($qtde_pendente_pv > 0 and $qtde_sugerida_op == 0 and $qtde_sugerida_PC == 0) {
+                    $ped_item_status = 'PRODUZIR';
+                    $ped_item_status_color = 'style="background-color: orange;color:#ffff;"';
+                } else if ($qtde_pendente_pv == 0 and $qtde_sugerida_op > 0) {
+                    $ped_item_status = 'PROGRAMADO';
+                    $ped_item_status_color = 'style=""';
+                } else if ($qtde_pendente_pv == 0 and $qtde_sugerida_pc > 0) {
+                    $ped_item_status = 'PROGRAMADO AGAS';
+                    $ped_item_status_color = 'style=""';
+                } else if ($qtde_pendente_pv > 0 and ($qtde_sugerida_pc > 0 or $qtde_sugerida_op > 0)) {
+                    $ped_item_status = 'PRODUZIR';
+                    $ped_item_status_color = 'style="background-color: orange;color:#ffff;"';
+                } else {
+                    if (strpos($dep_est_atende, 'AG-PA')) {
+                        $ped_item_status = 'ATENDIDO(AG)';
+                        $ped_item_status_color = 'style=""';
+                    } else {
+                        $ped_item_status = 'ATENDIDO';
+                        $ped_item_status_color = 'style=""';
+                    }
+                }
+
+
+                //atualizando array pedido com dados calculados
+                $pedido_vendas_array[$key_ped]['qtde_pend'] = $qtde_pendente_pv;
+                $pedido_vendas_array[$key_ped]['situacao'] = $ped_item_status;
+                $pedido_vendas_array[$key_ped]['situacao_color'] = $ped_item_status_color;
+                $pedido_vendas_array[$key_ped]['data_prev'] = $item_data_prev_op . $item_data_prev_pc;
+                $pedido_vendas_array[$key_ped]['doc'] = $dep_est_atende . $item_doc_atend_op . $item_doc_atend_pc;
+                $pedido_vendas_array[$key_ped]['saldo_est'] = $saldo_disp_atu_item_corrent;
+            }
+        } // fim do foreach pedidos
+
+        echo "FIM DO FOREACH2 ======================<br>";
+        print("<pre>" . print_r($pedido_vendas_array, true) . "</pre>");
 
         $carteira_processada = '
             <table id="tabela_relatorio" class="table table-sm table-hover table-bordered table-head-fixed tabela_carteira">
