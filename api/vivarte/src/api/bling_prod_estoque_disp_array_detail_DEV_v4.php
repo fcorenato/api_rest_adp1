@@ -3,7 +3,7 @@
 $inicio2 = microtime(true);
 
 date_default_timezone_set('America/Sao_Paulo');
-require('../config/conexao.php');
+require('../config/conexao_dev.php');
 include_once('../../sys_functions.php');
 
 // ============== AJAX CARTEIRA ==============================================
@@ -145,20 +145,16 @@ $data_final = date('Ymd');  // ultimo dia do mes
 
 
 if ($processar_carteira) {
-    //chamdada api pedidos get
-    // include_once('../../src/api/bling_pedido_vendas_get.php');
-    // //chamdada api prod_estoque get
-    // include_once('../../src/api/bling_prod_estoque_get.php');
-    // //chamdada api Op get
-    // include_once('../../src/api/bling_op_get.php');
-    // //chamdada api PC get
-    // include_once('../../src/api/bling_pedido_compras_get.php');
 
     //chamdada api bling v3
     include_once('../../src/api/bv3_pv_get.php');
     include_once('../../src/api/bv3_prod_estoque_get.php');
     include_once('../../src/api/bv3_op_get.php');
     include_once('../../src/api/bv3_pc_get.php');
+
+
+
+
 
     if ($api_qtde_pedido == 0) {
         $carteira_processada = '
@@ -173,6 +169,7 @@ if ($processar_carteira) {
         // echo $carteira_processada;
         exit;
     } else {
+        include('../config/conexao_dev.php');
         //criar array com dados do produto:
         $query1 = "SELECT * FROM md_cad_produtos";
         $result_query1 = mysql_query($query1);
@@ -185,6 +182,73 @@ if ($processar_carteira) {
                 $produtos_desc_array[trim($campos['referencia'])] = $campos['descricao'];
             }
         }
+
+        //criar array com ficha produto
+        $query1 = "SELECT * FROM md_prog_ficha_produto";
+        $result_query1 = mysql_query($query1);
+        $qtde_query1 = mysql_num_rows($result_query1);
+        if ($qtde_query1 > 0) {
+            while ($campos = mysql_fetch_array($result_query1)) {
+                $ficha_produto[$campos['produto']] = $campos;
+            }
+        }
+
+
+        //limpando dados de atualizacao da tabela OP
+        $limpa_tabela = mysql_query("UPDATE md_prog_op SET updated_at= NULL WHERE status = 'A'") or die(mysql_error());
+
+        //preechendo tabela md_prog_op
+        foreach ($op_array as $key_op => $value_op) {
+            //convertendo data
+            // if ($value_op['dataPrevisaoFinal']) {
+            //     $op_data_fim = $value_op['dataPrevisaoFinal'];
+            //     // $op_data_fim = substr($value_op['dataPrevisaoFinal'], 6, 4) . '-' . substr($value_op['dataPrevisaoFinal'], 3, 2) . '-' . substr($value_op['dataPrevisaoFinal'], 0, 2);
+            // } else {
+            //     $op_data_fim = NULL;
+            // }
+
+            //formata data de dd-mm-aaaa para aaaa-mm-dd
+            $op_data_inicio = $value_op['op_previsaoInicio'];
+            $op_data_inicio = substr($op_data_inicio, 6, 4) . '-' . substr($op_data_inicio, 3, 2) . '-' . substr($op_data_inicio, 0, 2);
+
+            $op_data_fim = $value_op['op_previsaoFinal'];
+            $op_data_fim = substr($op_data_fim, 6, 4) . '-' . substr($op_data_fim, 3, 2) . '-' . substr($op_data_fim, 0, 2);
+
+            $query_insert_op = "INSERT INTO md_prog_op (id, op_id, op_num, op_ref, op_qtde, op_qtde_atu, op_situacao,  op_previsaoInicio, op_previsaoFinal, deposito_origem, deposito_destino, observacoes, updated_at, status) VALUES 
+            (NULL,
+            '" . $value_op['op_id'] . "',
+            '" . $value_op['op_num'] . "',
+            '" . $value_op['op_ref'] . "',
+            '" . $value_op['op_qtde'] . "',
+            '" . $value_op['op_qtde_atu'] . "',
+            '" . $value_op['op_situacao'] . "',
+            '" . $op_data_inicio . "',
+            '" . $op_data_fim . "',
+            '" . $value_op['deposito_origem'] . "',
+            '" . $value_op['deposito_destino'] . "',
+            '" . mysql_real_escape_string($value_op['observacoes']) . "',
+            '" . date("Y-m-d H:i:s")  . "',
+            'A') ON DUPLICATE KEY UPDATE
+            op_qtde = '" . $value_op['op_qtde'] . "',
+            op_situacao = '" . $value_op['op_situacao'] . "',
+            op_previsaoInicio = '" . $op_data_inicio . "',
+            op_previsaoFinal = '" . $op_data_fim . "',
+            deposito_origem = '" . $value_op['deposito_origem'] . "',
+            deposito_destino = '" . $value_op['deposito_destino'] . "',
+            observacoes = '" . mysql_real_escape_string($value_op['observacoes']) . "',
+            updated_at = '" . date("Y-m-d H:i:s")  . "'  
+            ";
+
+            echo    'query insert op: ' . $query_insert_op . '<br>';
+            print("<pre>" . print_r($value_op, true) . "</pre>");
+            mysql_query($query_insert_op);
+        }
+
+
+        echo 'registro ficha =' . $ficha_produto['PMDS1010']['materia_prima'] . '<hr>';
+
+        print("<pre>" . print_r($ficha_produto, true) . "</pre>");
+
         //incluindo IPI no valor do item
         $item_valor_total =  $value['item_valor'] + ($value['item_valor'] * $prod_array_ipi[$value['item_ref']] / 100);
 
@@ -248,6 +312,9 @@ if ($processar_carteira) {
             $item_doc_atend_op = '';
             $item_data_prev_op = '';
 
+            $item_doc_op = '';
+            $item_doc_op_json = '';
+
             if ($qtde_pendente_pv > 0 and $consulta_op and $atender_pedidovenda and $value_ped['cliente_nome'] != "PRODUÇÃO ESTOQUE") {
                 if ($atender_parcial_op) {
                     foreach ($op_array as $key_op => $value_op) {
@@ -293,6 +360,9 @@ if ($processar_carteira) {
                                     $destacar_op = 'style="background-color: LightGreen;"';
                                     $item_data_prev_op .= substr($value_op['op_previsaoFinal'], 0, 10) . ' ';
                                     $item_doc_atend_op .= 'OP:' . $value_op['op_num'] . ' (' . number_format($qtde_sugerida_op_item_atual,    2, ',', '.') . ') ';
+
+                                    $item_doc_op .= $value_op['op_num'] . ',';
+                                    $item_doc_op_json .= '{"op":"' . $value_op['op_num'] . '","qtde":"' . $qtde_sugerida_op_item_atual . '"},';
                                 }
 
                                 echo "saldo op depois: $op_array[$key_op]['op_qtde_atu'] <hr>";
@@ -311,6 +381,8 @@ if ($processar_carteira) {
                             $destacar_op = 'style="background-color: LightGreen;"';
                             $item_data_prev_op = substr($value_op['op_previsaoFinal'], 0, 10);
                             $item_doc_atend_op = 'OP:' . $value_op['op_num'];
+
+                            $item_doc_op .= $value_op['op_num'] . ',';
                         }
                     }
                 }
@@ -354,6 +426,7 @@ if ($processar_carteira) {
             $pedido_vendas_array[$key_ped]['situacao_color'] = $ped_item_status_color;
             $pedido_vendas_array[$key_ped]['data_prev'] = $item_data_prev_op . $item_data_prev_pc;
             $pedido_vendas_array[$key_ped]['doc'] = $dep_est_atende . $item_doc_atend_op . $item_doc_atend_pc;
+            $pedido_vendas_array[$key_ped]['op'] = $item_doc_op_json;
             $pedido_vendas_array[$key_ped]['saldo_est'] = $saldo_disp_atu_item_corrent;
         } // fim do foreach pedidos
 
@@ -438,6 +511,8 @@ if ($processar_carteira) {
                 $data_prev_op = '';
                 $item_doc_atend_op = '';
                 $item_data_prev_op = '';
+                $item_doc_op = '';
+                $item_doc_op_json = '';
 
                 if ($qtde_pendente_pv > 0 and $consulta_op and $atender_pedidovenda) {
                     echo "<br>Verificando OP para pedido: " . $value_ped['ped_num'] . " ref: " . $value_ped['item_ref'] . " - qtde pendente: $qtde_pendente_pv <br>";
@@ -464,6 +539,9 @@ if ($processar_carteira) {
                                 $destacar_op = 'style="background-color: LightGreen;"';
                                 $item_data_prev_op .= substr($value_op['op_previsaoFinal'], 0, 10) . ' ';
                                 $item_doc_atend_op .= 'OP:' . $value_op['op_num'] . ' (' . number_format($qtde_sugerida_op_item_atual,    2, ',', '.') . ') ';
+
+                                $item_doc_op .= $value_op['op_num'] . ',';
+                                $item_doc_op_json .= '{"op":"' . $value_op['op_num'] . '","qtde":"' . $qtde_sugerida_op_item_atual . '"},';
                             }
                         }
                     } else {
@@ -476,6 +554,8 @@ if ($processar_carteira) {
                                 $destacar_op = 'style="background-color: LightGreen;"';
                                 $item_data_prev_op = substr($value_op['op_previsaoFinal'], 0, 10);
                                 $item_doc_atend_op = 'OP:' . $value_op['op_num'];
+
+                                $item_doc_op .= $value_op['op_num'] . ',';
                             }
                         }
                     }
@@ -592,6 +672,7 @@ if ($processar_carteira) {
                 $pedido_vendas_array[$key_ped]['situacao_color'] = $ped_item_status_color;
                 $pedido_vendas_array[$key_ped]['data_prev'] = $item_data_prev_op . $item_data_prev_pc;
                 $pedido_vendas_array[$key_ped]['doc'] = $dep_est_atende . $item_doc_atend_op . $item_doc_atend_pc;
+                $pedido_vendas_array[$key_ped]['op'] = $item_doc_op_json;
                 $pedido_vendas_array[$key_ped]['saldo_est'] = $saldo_disp_atu_item_corrent;
             }
         } // fim do foreach pedidos
@@ -639,7 +720,7 @@ if ($processar_carteira) {
         //print("<pre>" . print_r($pedido_vendas_array, true) . "</pre>");
 
         // percorrendo array pedidos ja processado
-        require('../config/conexao.php');
+        require('../config/conexao_dev.php');
 
         // $limpa_tabela = mysql_query("TRUNCATE md_vendas_carteira") or die(mysql_error());
 
@@ -826,13 +907,88 @@ if ($processar_carteira) {
                     updated_at        = VALUES(updated_at)
                 ";
 
-                echo '<hr>inserindou ou atualiznado carteira: <br>' . $sql . '<hr>';
+                echo '<hr>inserindou ou atualiznado md_vendas_carteira: <br>' . $sql . '<hr>';
 
                 $result = mysql_query($sql);
 
                 if (!$result) {
                     die('Erro no INSERT: ' . mysql_error());
                 }
+
+                // =========================================================================================
+                //inserindo itens na tabela md_prog_carteira_fila
+                if ($value_ped['situacao'] != "ATENDIDO") {
+
+                    //retirando ultima virgula no final da string $value_ped['op']
+                    $item_op = substr($value_ped['op'], 0, -1);
+                    $item_doc_op_json = "[" . substr($value_ped['op'], 0, -1) . "]";
+                    // $item_op = '';
+ 
+                    $sql = "
+                    INSERT INTO md_prog_carteira_fila (id, item_pv_id, emp, pedido_bling, pedido_biv, cliente_nome, data_emissao, data_entrega, produto, materia_prima, consumo_mp, modelo_caixa, consumo_caixa, espessura, qtde_etapa, qtde_pedido, qtde_pendente, situacao, doc, maquina1, fila_qtde, fila, fila_status, op_num, op_sugerida, data_inicio, data_fim, status,created_at,updated_at) VALUES (
+                        NULL,
+                        '" . mysql_real_escape_string($value_ped['item_pv_id']) . "',
+                        '" . mysql_real_escape_string($ud_array[$value_ped['ped_ud']]) . "',
+                        '" . mysql_real_escape_string($value_ped['ped_num']) . "',
+                        '" . mysql_real_escape_string($value_ped['ped_web_num']) . "',
+                        '" . mysql_real_escape_string($value_ped['cliente_nome']) . "',
+                        '" . mysql_real_escape_string($value_ped['ped_emissao']) . "',
+                        '" . mysql_real_escape_string($ped_data_prev) . "',
+                        '" . mysql_real_escape_string($value_ped['item_ref']) . "',
+                        '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['materia_prima']) . "',
+                        '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['consumo_mp']) . "',
+                        '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['modelo_caixa']) . "',
+                        '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['consumo_caixa']) . "',
+                        '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['espessura']) . "',
+                        '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['qtde_etapa']) . "',
+                        '" . mysql_real_escape_string($value_ped['item_qtde']) . "',
+                        '" . mysql_real_escape_string($value_ped['qtde_pend']) . "',
+                        '" . mysql_real_escape_string($value_ped['situacao']) . "',
+                        '" . mysql_real_escape_string($value_ped['doc']) . "',
+                        '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['maquina1']) . "',
+                        '" . mysql_real_escape_string($value_ped['qtde_pend']) . "',
+                        '0',
+                        'A PRODUZIR',
+                        '',
+                         '" . mysql_real_escape_string($item_doc_op_json) . "',
+                        NULL,
+                        NULL,
+                        'A', 
+                        '" . date("Y-m-d H:i:s") . "',
+                        '" . date("Y-m-d H:i:s")  . "'
+                    ) ON DUPLICATE KEY UPDATE
+                        pedido_bling       = VALUES(pedido_bling),
+                        pedido_biv         = VALUES(pedido_biv),
+                        cliente_nome       = VALUES(cliente_nome),
+                        data_emissao       = VALUES(data_emissao),
+                        data_entrega       = VALUES(data_entrega),
+                        produto            = VALUES(produto),    
+                        materia_prima      = VALUES(materia_prima),
+                        consumo_mp         = VALUES(consumo_mp),
+                        modelo_caixa       = VALUES(modelo_caixa),
+                        consumo_caixa      = VALUES(consumo_caixa),
+                        espessura          = VALUES(espessura),
+                        qtde_etapa         = VALUES(qtde_etapa),
+                        qtde_pedido        = VALUES(qtde_pedido),
+                        qtde_pendente      = VALUES(qtde_pendente),
+                        situacao           = VALUES(situacao),
+                        doc                = VALUES(doc),
+                        maquina1           = VALUES(maquina1),
+                        status             = VALUES(status),
+                        op_sugerida        = VALUES(op_sugerida),
+                        updated_at = NOW()
+                    ";
+
+                    echo '<hr>inserindou ou atualiznado md_prog_carteira_fila: <br>' . $sql . '<br><br>
+                     MP: ' . $ficha_produto[$value_ped['item_ref']]['materia_prima'] . '<hr>';
+
+                    $result = mysql_query($sql);
+
+                    if (!$result) {
+                        die('Erro no INSERT: ' . mysql_error());
+                    }
+                } // FIM md_prog_carteira_fila 
+
 
                 $carteira_processada .= '
                     <tr class="tr_result ' . $value_ped['item_ref'] . '">
@@ -1445,7 +1601,7 @@ $carteira_processada = str_replace("'", "", $carteira_processada);
 $update_at = date("Y-m-d H:i:s");
 // salvar relatorio processado ===================================================
 
-include('../config/conexao.php');
+include('../config/conexao_dev.php');
 $limpa_tabela = mysql_query("TRUNCATE md_vendas_carteira_rel") or die(mysql_error());
 $query_rel_cart = "INSERT INTO `md_vendas_carteira_rel` (`id`, `conteudo`, `create_at`) VALUES ('1', '$carteira_processada', '$update_at');";
 // echo '<hr>' . $query_rel_cart . '<hr>';
@@ -1455,7 +1611,7 @@ $result = mysql_query($query_rel_cart) or die(mysql_error());
 $atualiza_estoque_biv = TRUE;
 if ($atualiza_estoque_biv) {
 
-    include('../config/conexao.php');
+    include('../config/conexao_dev.php');
     $limpa_tabela = mysql_query("TRUNCATE md_estoque_disponivel_detail;") or die(mysql_error());
 
     //ESTOQUE
@@ -1658,6 +1814,9 @@ $result2 = mysql_query($query_rel_cart2) or die(mysql_error());
 
 //VERIFICANDO ITENS NÃO ATUALIZADOS
 include_once('../../src/api/bv3_pv_status_get.php');
+
+//VERIFICANDO OPS NÃO ATUALIZADOS
+include_once('../../src/api/bv3_op_status_get.php');
 
 echo 'fim';
 //fim do cronometro

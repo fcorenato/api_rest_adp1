@@ -5,9 +5,9 @@
 // E ATUALIZA A TABELA MD_VENDAS_CARTEIRA COM OS NOVOS DADOS
 // ============================================================================================================ 
 
-
+echo '<h1>Atualizando status dos PVs que nao foram atualizados - API Bling V3</h1>';
 require('../config/conexao.php');
-$pedido_nao_atualizado = mysql_query("SELECT pv_id, bling_emp FROM md_vendas_carteira WHERE updated_at is null") or die(mysql_error());
+$pedido_nao_atualizado = mysql_query("SELECT pv_id, bling_emp, produto FROM md_vendas_carteira WHERE updated_at is null") or die(mysql_error());
 echo 'Qtde pedidos nao atualizados: ' . mysql_num_rows($pedido_nao_atualizado) . '<br>';
 $array_pvs = array();
 while ($pvs = mysql_fetch_object($pedido_nao_atualizado)) {
@@ -186,8 +186,8 @@ foreach ($array_pvs as $pv_id => $bling_emp) {
 }
 echo '<hr>PEDIDO<br>';
 print("<pre>" . print_r($dados_pedido, true) . "</pre>");
-// echo '<hr>ITENS DOS PEDIDOS<br>';
-// print("<pre>" . print_r($dados_pedido_itens, true) . "</pre>");
+echo '<hr>ITENS DOS PEDIDOS QUE NAO FORAM ATUALIZADOS<br>';
+print("<pre>" . print_r($dados_pedido_itens, true) . "</pre>");
 
 //atualizando tabela md_vendas_carteira
 foreach ($dados_pedido as $pv) {
@@ -198,6 +198,7 @@ foreach ($dados_pedido as $pv) {
             situacao = '" . mysql_real_escape_string($pv['ped_situacao_desc']) . "',
             updated_at = NOW()
         WHERE 
+            updated_at IS NULL AND
             pv_id = '" . mysql_real_escape_string($pv['ped_id']) . "'
     ";
     echo '<hr>' . $sql;

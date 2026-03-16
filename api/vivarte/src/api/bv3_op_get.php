@@ -45,7 +45,10 @@ while ($bling_api_cod_erro == 0) {
                 $op_num = $ops->numero;
                 // echo $op_num . '<br>';
                 $op_situacao = $ops->situacao->nome;
+                $dataPrevisaoInicio = $ops->dataPrevisaoInicio;
                 $dataPrevisaoFinal = $ops->dataPrevisaoFinal;
+
+                $deposito_origem = $ops->deposito->idOrigem;
                 $deposito_dest = $ops->deposito->idDestino;
 
                 //11919578899 = VH - PROD ACABADO  e  1462456848 = VC - PROD ACABADO
@@ -87,17 +90,21 @@ while ($bling_api_cod_erro == 0) {
                         
 
                         $op_array_api['VI-' . $op_num] = array(
+                            'op_id' => $op_id,
                             'op_ref' => $op_ref,
                             'op_num' => 'VI-' . $op_num,
                             'op_situacao' => $op_situacao,
                             'op_qtde' => $op_qtde,
                             'op_qtde_atu' => $op_qtde,
-                            'op_previsaoFinal' => date("d/m/Y", strtotime($dataPrevisaoFinal)),
+                            'op_previsaoInicio' => (new DateTime($dataPrevisaoInicio))->format('d/m/Y'),
+                            'op_previsaoFinal' => (new DateTime($dataPrevisaoFinal))->format('d/m/Y'),
+                            'deposito_origem' => $deposito_origem,
                             'deposito_destino' => $deposito_dest,
                             'observacoes' => $resultado2->data->observacoes
                         );
                     }
                 }
+                usleep(200000);
             }
         } else {
             $bling_api_cod_erro = 1;
@@ -149,7 +156,11 @@ while ($bling_api_cod_erro == 0) {
                 $op_num = $ops->numero;
                 // echo $op_num . '<br>';
                 $op_situacao = $ops->situacao->nome;
+
+                $dataPrevisaoInicio = $ops->dataPrevisaoInicio;
                 $dataPrevisaoFinal = $ops->dataPrevisaoFinal;
+
+                $deposito_origem = $ops->deposito->idOrigem;
                 $deposito_dest = $ops->deposito->idDestino;
 
                 //11919578899 = VH - PROD ACABADO  e  1462456848 = VC - PROD ACABADO
@@ -189,17 +200,21 @@ while ($bling_api_cod_erro == 0) {
                         }
 
                         $op_array_api['AG-' . $op_num] = array(
+                            'op_id' => $op_id,
                             'op_ref' => $op_ref,
                             'op_num' => 'AG-' . $op_num,
                             'op_situacao' => $op_situacao,
                             'op_qtde' => $op_qtde,
                             'op_qtde_atu' => $op_qtde,
-                            'op_previsaoFinal' => date("d/m/Y", strtotime($dataPrevisaoFinal)),
+                            'op_previsaoInicio' => (new DateTime($dataPrevisaoInicio))->format('d/m/Y'),
+                            'op_previsaoFinal' => (new DateTime($dataPrevisaoFinal))->format('d/m/Y'),
+                            'deposito_origem' => $deposito_origem,
                             'deposito_destino' => $deposito_dest,
                             'observacoes' => $resultado2->data->observacoes
                         );
                     }
                 }
+                usleep(200000);
             }
         } else {
             $bling_api_cod_erro = 1;

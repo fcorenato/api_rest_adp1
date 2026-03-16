@@ -12,7 +12,7 @@ $headers = [
 // Dados da requisição
 $data = http_build_query([
     'grant_type' => 'authorization_code',
-    'code' => '5adc5d0746ba3ccb58c2847a3f424d4cb3b285bf'
+    'code' => 'd09aebd1dc28e3a1dc24f3587f69e334b7031c30'
 ]);
 
 // Inicializando o cURL
