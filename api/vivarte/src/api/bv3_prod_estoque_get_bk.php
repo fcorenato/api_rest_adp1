@@ -5,25 +5,74 @@ $inicio_est_get = microtime(true);
 include_once('biv_botconversa_enviar_dev.php');
 // ====================================== ACESSANDO VIVARTE ==================================================
 include('bv3_get_token_vivarte.php');
+$api_pagina = 0;
+$bling_api_cod_erro = 0;
+$qtd_prods = 0;
+$qtd_prods_estoque = 0;
+$refs_estoque = [];
+$resultado2_count = 0;
 
+while ($bling_api_cod_erro == 0) {
+    //inicializando CURL =================================================================
+    $api_pagina++;
+    $url = "https://api.bling.com.br/Api/v3/produtos?pagina=$api_pagina";
+    // echo $url . '<hr>';
 
-//consulta no BIV produtos ativos para consultar estoque
-require('../config/conexao.php');
-$produtos = mysql_query("SELECT referencia, descricao, unidade, id_bling_prod, id_bling_prod2  FROM md_cad_produtos WHERE status = 'A' and (referencia NOT LIKE 'MPP%' AND referencia NOT LIKE 'IMP%');");
-while ($prod = mysql_fetch_array($produtos)) {
-    if ($prod['id_bling_prod'] > 0) {
-        $refs_id_vivarte[] = $prod['id_bling_prod'];
+    $curl = curl_init();
+    curl_setopt_array($curl, array(
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => array(
+            'Accept: application/json',
+            'Authorization: Bearer ' . $token . '',
+            'Cookie: PHPSESSID=btthevjjl77h84ft9hdn3ikved'
+        ),
+    ));
+    $retorno = curl_exec($curl);
+    curl_close($curl);
+    //finalizando CURL ====================================================================
+
+    $resultado = json_decode($retorno);
+    // print("<pre>" . print_r($resultado, true) . "</pre>");
+
+    if ($resultado->error) {
+        $msg = 'Erro api bling v3 (bv3_prod_estoque_get.php AA) = type: ' . $resultado->error->message . ' - ' . $resultado->error->description;
+        botc_enviar($msg);
+
+        // echo $msg;
+        $bling_api_cod_erro = 1;
+    } else {
+
+        if (isset($resultado->data[0]) or  $resultado->data[0]->id > 0) {
+
+            foreach ($resultado->data as $prod) {
+                $qtd_prods = $qtd_prods + 1;
+                $prod_id = $prod->id;
+                $prod_codigo = $prod->codigo;
+                $prod_nome = $prod->nome;
+                $prod_estoque = $prod->estoque->saldoVirtualTotal;
+                $prod_sit = $prod->situacao;
+                if ($prod_codigo <> "" and $prod_estoque > 0 and $prod_sit == 'A') {
+                    $qtd_prods_estoque++;
+                    // echo $prod_id .' - '. $prod_codigo . ';saldo: ' . $prod_estoque . ';Situação: ' . $prod_sit . '<br>';
+                    $refs_estoque[] = $prod_id;
+                }
+            }
+        } else {
+            $bling_api_cod_erro = 1;
+            // echo 'erro bling = ' . $bling_api_cod_erro . 'na pagina = ' . $api_pagina;
+        }
     }
-    
-    if ($prod['id_bling_prod2'] > 0) {
-        $refs_id_agas[] = $prod['id_bling_prod2'];
-    }
+
+    usleep(200000);
 }
 
+// echo 'total paginas = ' . $api_pagina . ' e produtos = ' . $qtd_prods . ' e produto com estoque = ' . $qtd_prods_estoque . '<br>';
 
-// print("ids produtos vivarte<pre>" . print_r($refs_id_vivarte, true) . "</pre>");
+
+// print("<pre>" . print_r($refs_estoque, true) . "</pre>");
 $i = 0;
-foreach ($refs_id_vivarte as $key => $value) {
+foreach ($refs_estoque as $key => $value) {
     $idp = $value;
     $ids_pesq .= '&idsProdutos[]=' . $idp;
 
@@ -95,12 +144,74 @@ if ($resultado2_count != $qtd_prods_estoque) {
 
 // ====================================== ACESSANDO AGAS ==================================================
 include('bv3_get_token_agas.php');
-// echo 'token AGAS = ' . $token . '<hr>';
+$api_pagina = 0;
+$bling_api_cod_erro = 0;
+$qtd_prods = 0;
+$qtd_prods_estoque = 0;
+$refs_estoque = [];
+$resultado2_count = 0;
 
-// print("ids produtos AGAS<pre>" . print_r($refs_id_agas, true) . "</pre>");
+while ($bling_api_cod_erro == 0) {
+    //inicializando CURL =================================================================
+    $api_pagina++;
+    $url = "https://api.bling.com.br/Api/v3/produtos?pagina=$api_pagina";
+    // echo $url . '<hr>';
+
+    $curl = curl_init();
+    curl_setopt_array($curl, array(
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => array(
+            'Accept: application/json',
+            'Authorization: Bearer ' . $token . '',
+            'Cookie: PHPSESSID=btthevjjl77h84ft9hdn3ikved'
+        ),
+    ));
+    $retorno = curl_exec($curl);
+    curl_close($curl);
+    //finalizando CURL ====================================================================
+
+    $resultado = json_decode($retorno);
+    // print("<pre>" . print_r($resultado, true) . "</pre>");
+
+    if ($resultado->error) {
+        $msg = 'Erro api bling v3 (bv3_prod_estoque_get.php AA) = type: ' . $resultado->error->message . ' - ' . $resultado->error->description;
+        botc_enviar($msg);
+
+        // echo $msg;
+        $bling_api_cod_erro = 1;
+    } else {
+
+        if (isset($resultado->data[0]) or  $resultado->data[0]->id > 0) {
+
+            foreach ($resultado->data as $prod) {
+                $qtd_prods = $qtd_prods + 1;
+                $prod_id = $prod->id;
+                $prod_codigo = $prod->codigo;
+                $prod_nome = $prod->nome;
+                $prod_estoque = $prod->estoque->saldoVirtualTotal;
+                $prod_sit = $prod->situacao;
+                if ($prod_codigo <> "" and $prod_estoque > 0 and $prod_sit == 'A') {
+                    $qtd_prods_estoque++;
+                    // echo $prod_codigo . ';saldo: ' . $prod_estoque . ';Situação: ' . $prod_sit . '<br>';
+                    $refs_estoque[] = $prod_id;
+                }
+            }
+        } else {
+            $bling_api_cod_erro = 1;
+            // echo 'erro bling = ' . $bling_api_cod_erro . 'na pagina = ' . $api_pagina;
+        }
+    }
+
+    usleep(200000);
+}
+
+// echo 'total paginas = ' . $api_pagina . ' e produtos = ' . $qtd_prods . ' e produto com estoque = ' . $qtd_prods_estoque . '<br>';
+
+
+// print("<pre>" . print_r($refs_estoque, true) . "</pre>");
 $i = 0;
-$ids_pesq = '';
-foreach ($refs_id_agas as $key => $value) {
+foreach ($refs_estoque as $key => $value) {
     $idp = $value;
     $ids_pesq .= '&idsProdutos[]=' . $idp;
 
@@ -127,7 +238,7 @@ curl_close($curl);
 //finalizando CURL ====================================================================
 
 $resultado2 = json_decode($retorno2);
-// print("res: <pre>" . print_r($resultado2, true) . "</pre>");
+// print("<pre>" . print_r($resultado2, true) . "</pre>");
 
 $dep_arry['1462456848'] = 'VC-PA';
 $dep_arry['11919578899'] = 'VH-PA';
@@ -176,5 +287,5 @@ $fim_est_get = microtime(true);
 $tempoExecucao_est_get = $fim_est_get - $inicio_est_get;
 printf("<hr>O script ESTOQUE_GET levou %f segundos para finalizar.\n", $tempoExecucao_est_get);
 
-// print("<pre>" . print_r($estoquedisp, true) . "</pre>");
+print("<pre>" . print_r($estoquedisp, true) . "</pre>");
 

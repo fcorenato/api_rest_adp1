@@ -151,6 +151,7 @@ while ($bling_api_cod_erro == 0) {
 
                             'ped_ud' => $pedido->loja->id,
                             'ped_num' => $pedido->numero,
+                            'ped_id' => $pedido->id,
                             'ped_web_num' => $pedido->numeroPedidoCompra,
                             'ped_situacao' => $pedido->situacao->id,
                             'ped_emissao' => $pedido->data,
@@ -158,6 +159,7 @@ while ($bling_api_cod_erro == 0) {
                             'ped_valorfrete' => $pedido->transporte->frete,
                             'cond_pgto' => $pedido->parcelas[0]->observacoes,
                             'item_valor' => $total_item,
+                            'item_pv_id' => trim($item->id),
                             'item_ref' => trim($item->codigo),
                             'item_qtde' => $item->quantidade,
                             'item_pesobruto' => $total_peso,
