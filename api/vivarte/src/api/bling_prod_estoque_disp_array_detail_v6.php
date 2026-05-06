@@ -426,7 +426,8 @@ if ($processar_carteira) {
             $pedido_vendas_array[$key_ped]['situacao_color'] = $ped_item_status_color;
             $pedido_vendas_array[$key_ped]['data_prev'] = $item_data_prev_op . $item_data_prev_pc;
             $pedido_vendas_array[$key_ped]['doc'] = $dep_est_atende . $item_doc_atend_op . $item_doc_atend_pc;
-            $pedido_vendas_array[$key_ped]['op'] = $item_doc_op_json;
+            // $pedido_vendas_array[$key_ped]['op'] = $item_doc_op_json;
+            $pedido_vendas_array[$key_ped]['op_num_assoc'] = $item_doc_op;
             $pedido_vendas_array[$key_ped]['saldo_est'] = $saldo_disp_atu_item_corrent;
         } // fim do foreach pedidos
 
@@ -684,7 +685,7 @@ if ($processar_carteira) {
                 $pedido_vendas_array[$key_ped]['situacao'] = $ped_item_status;
                 $pedido_vendas_array[$key_ped]['situacao_color'] = $ped_item_status_color;
                 $pedido_vendas_array[$key_ped]['data_prev'] .= $item_data_prev_op . $item_data_prev_pc;
-                $pedido_vendas_array[$key_ped]['op'] .= $item_doc_op_json;
+                $pedido_vendas_array[$key_ped]['op'] .= $item_doc_op;
                 $pedido_vendas_array[$key_ped]['saldo_est'] .= $saldo_disp_atu_item_corrent;
             }
         } // fim do foreach pedidos
@@ -851,7 +852,7 @@ if ($processar_carteira) {
                 INSERT INTO md_vendas_carteira (
                     pv_id, item_pv_id, bling_emp, ud, ped_bling, orc_biv, nome_cliente, emissao, entrega, cond_pgto,
                     valor_rs_com_ipi, produto, qtde_pedido, est_sugest, op_sugest,
-                    pc_sugest, qtde_pend, situacao, situacao_color, data_prev, doc,
+                    pc_sugest, qtde_pend, situacao, situacao_color, data_prev, doc, op_num, op_sugerida,
                     saldo_est, tipo_cli, uf, cidade, bairro, volume, peso_bruto,
                     frete, msg_nota, obs_ped_cli, created_at, updated_at 
                 ) VALUES (
@@ -876,6 +877,8 @@ if ($processar_carteira) {
                     '" . mysql_real_escape_string($value_ped['situacao_color']) . "',
                     '" . mysql_real_escape_string($value_ped['data_prev']) . "',
                     '" . mysql_real_escape_string($value_ped['doc']) . "',
+                    '" . mysql_real_escape_string($value_ped['op_num_assoc']) . "',
+                    '" . mysql_real_escape_string($value_ped['op']) . "',
                     '" . mysql_real_escape_string($value_ped['saldo_est']) . "',
                     '" . mysql_real_escape_string($value_ped['cliente_tipo']) . "',
                     '" . mysql_real_escape_string($value_ped['cliente_uf']) . "',
@@ -906,6 +909,8 @@ if ($processar_carteira) {
                     situacao_color    = VALUES(situacao_color),
                     data_prev         = VALUES(data_prev),
                     doc               = VALUES(doc),
+                    op_num            = VALUES(op_num),
+                    op_sugerida       = VALUES(op_sugerida),
                     saldo_est         = VALUES(saldo_est),
                     tipo_cli          = VALUES(tipo_cli),
                     uf                = VALUES(uf),
