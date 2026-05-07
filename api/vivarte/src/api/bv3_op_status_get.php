@@ -7,7 +7,7 @@
 
 echo '<h1>Atualizando status das OPs que nao foram atualizadas - API Bling V3</h1>';
 include('../config/conexao.php');
-$ops_nao_atualizado = mysql_query("SELECT op_id, op_num FROM md_prog_op WHERE updated_at is null") or die(mysql_error());
+$ops_nao_atualizado = mysql_query("SELECT op_id, op_num FROM md_prog_op WHERE updated_at is null and op_situacao NOT IN ('Cancelado','Finalizado','Finalizado parcial')") or die(mysql_error());
 echo 'Qtde OPs nao atualizados: ' . mysql_num_rows($ops_nao_atualizado) . '<br>';
 $array_ops = array();
 while ($ops = mysql_fetch_object($ops_nao_atualizado)) {
