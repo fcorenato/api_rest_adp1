@@ -67,6 +67,7 @@ foreach ($array_pvs as $pv_id => $bling_emp) {
         21	Em digitação
         24	Verificado
         10928	Amostras e Bonificações
+        37589	Pedido faturado parcialmente
         */
 
         $array_status_pedido = array();
@@ -78,6 +79,7 @@ foreach ($array_pvs as $pv_id => $bling_emp) {
         $array_status_pedido['21'] = 'VERIFICAR';
         $array_status_pedido['24'] = 'VERIFICAR';
         $array_status_pedido['10928'] = 'VERIFICAR';
+        $array_status_pedido['37589'] = 'FATURADO PARCIALMENTE';
 
         $pedido = $resultado2->data;
         $dados_pedido[] = array(

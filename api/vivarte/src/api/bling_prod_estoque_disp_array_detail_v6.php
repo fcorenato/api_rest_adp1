@@ -851,7 +851,7 @@ if ($processar_carteira) {
                 $sql = "
                 INSERT INTO md_vendas_carteira (
                     pv_id, item_pv_id, bling_emp, ud, ped_bling, orc_biv, nome_cliente, emissao, entrega, cond_pgto,
-                    valor_rs_com_ipi, produto, qtde_pedido, est_sugest, op_sugest,
+                    valor_rs_com_ipi, produto, qtde_pedido_original, qtde_pedido, est_sugest, op_sugest,
                     pc_sugest, qtde_pend, situacao, situacao_color, data_prev, doc, op_num, op_sugerida,
                     saldo_est, tipo_cli, uf, cidade, bairro, volume, peso_bruto,
                     frete, msg_nota, obs_ped_cli, created_at, updated_at 
@@ -868,6 +868,7 @@ if ($processar_carteira) {
                     '" . mysql_real_escape_string($value_ped['cond_pgto']) . "',
                     '" . mysql_real_escape_string($item_valor_cipi) . "',
                     '" . mysql_real_escape_string($value_ped['item_ref']) . "',
+                    '" . mysql_real_escape_string($value_ped['item_qtde_original']) . "',
                     '" . mysql_real_escape_string($value_ped['item_qtde']) . "',
                     '" . mysql_real_escape_string($value_ped['est_sugest']) . "',
                     '" . mysql_real_escape_string($value_ped['op_sugest']) . "',
@@ -900,6 +901,7 @@ if ($processar_carteira) {
                     cond_pgto         = VALUES(cond_pgto),
                     valor_rs_com_ipi  = VALUES(valor_rs_com_ipi),
                     produto           = VALUES(produto),
+                    qtde_pedido_original = VALUES(qtde_pedido_original),
                     qtde_pedido       = VALUES(qtde_pedido),
                     est_sugest        = VALUES(est_sugest),
                     op_sugest         = VALUES(op_sugest),

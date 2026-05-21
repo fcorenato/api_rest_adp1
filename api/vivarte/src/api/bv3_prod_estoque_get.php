@@ -9,7 +9,7 @@ include('bv3_get_token_vivarte.php');
 
 //consulta no BIV produtos ativos para consultar estoque
 require('../config/conexao.php');
-$produtos = mysql_query("SELECT referencia, descricao, unidade, id_bling_prod, id_bling_prod2  FROM md_cad_produtos WHERE status = 'A' and (referencia NOT LIKE 'MPP%' AND referencia NOT LIKE 'IMP%');");
+$produtos = mysql_query("SELECT referencia, descricao, unidade, id_bling_prod, id_bling_prod2  FROM md_cad_produtos WHERE 1 and (referencia NOT LIKE 'MPP%' AND referencia NOT LIKE 'IMP%');");
 while ($prod = mysql_fetch_array($produtos)) {
     if ($prod['id_bling_prod'] > 0) {
         $refs_id_vivarte[] = $prod['id_bling_prod'];

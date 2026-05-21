@@ -27,10 +27,11 @@ while ($bling_api_cod_erro == 0) {
     21	Em digitação
     24	Verificado
     10928	Amostras e Bonificações
+    37589 Pedido faturado parcialmente
     */
 
 
-    $url = "https://api.bling.com.br/Api/v3/pedidos/vendas?pagina=$api_pagina&idsSituacoes[]=6&idsSituacoes[]=15&idsSituacoes[]=10928";
+    $url = "https://api.bling.com.br/Api/v3/pedidos/vendas?pagina=$api_pagina&idsSituacoes[]=6&idsSituacoes[]=15&idsSituacoes[]=10928&idsSituacoes[]=37589";
 
     // echo $url . '<hr>';
 
@@ -95,6 +96,38 @@ while ($bling_api_cod_erro == 0) {
                     // print("<pre>" . print_r($resultado2, true) . "</pre>");
                 } else {
                     $pedido = $resultado2->data;
+
+                    //==== se pedido faturado PARCIALMENTE, buscar os itens pendentes ===
+                    $itens_nf = array();
+                    if ($pedido->situacao->id == 37589) {
+                        $idnfe = $pedido->notaFiscal->id;
+                        echo '<hr> CONSTULTANDO NF PEDIDO FATURADO PARCIALMENTE ID: ' . $idnfe . ' <hr>';
+
+                        //inicializando CURL =================================================================
+                        $url = "https://api.bling.com.br/Api/v3/nfe/$idnfe";
+                        // echo $url . '<hr>';
+                        $curl = curl_init();
+                        curl_setopt_array($curl, array(
+                            CURLOPT_URL => $url,
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_HTTPHEADER => array(
+                                'Accept: application/json',
+                                'Authorization: Bearer ' . $token . '',
+                                'Cookie: PHPSESSID=btthevjjl77h84ft9hdn3ikved'
+                            ),
+                        ));
+                        $retornonf = curl_exec($curl);
+                        curl_close($curl);
+                        //finalizando CURL ====================================================================
+                        $retornonf = json_decode($retornonf);
+                        if ($retornonf->data->id > 0) {
+                            foreach ($retornonf->data->itens as $item) {
+                                $itens_nf[$item->codigo] += $item->quantidade;
+                            }
+                        }
+                        echo "ITENS NF: <hr>";
+                        print("<pre>" . print_r($itens_nf, true) . "</pre>");
+                    }
                     foreach ($resultado2->data->itens as $item) {
 
                         //calculando total item com desconto
@@ -169,7 +202,8 @@ while ($bling_api_cod_erro == 0) {
                             'item_valor' => $total_item,
                             'item_pv_id' => trim($item->id),
                             'item_ref' => trim($item->codigo),
-                            'item_qtde' => $item->quantidade,
+                            'item_qtde_original' => $item->quantidade,
+                            'item_qtde' => $item->quantidade - $itens_nf[$item->codigo],
                             'item_pesobruto' => $total_peso,
                             'item_pesototal' => $total_peso,
                             'item_volumetotal' => $total_volumes,
@@ -182,13 +216,27 @@ while ($bling_api_cod_erro == 0) {
                             'est_sugest' => '',
                             'op_sugest' => '',
                             'pc_sugest' => '',
-                            'qtde_pend' => $item->quantidade,
+                            'qtde_pend' => $item->quantidade - $itens_nf[$item->codigo],
                             'situacao' => '',
                             'situacao_color' => '',
                             'data_prev' => '',
                             'doc' => '',
-                            'saldo_est' => ''
+                            'saldo_est' => '',
+                            'item_fat_parcial' => isset($itens_nf[$item->codigo]) ? 'SIM' : 'NAO'
                         );
+
+                        //se item parcial abatee
+                        if (isset($itens_nf[$item->codigo])) {
+                            // echo "ANTES--ITEM COD: $item->codigo - QTDE PEDIDO: $item->quantidade - QTDE NF: " . $itens_nf[$item->codigo] . ' <hr>';
+
+                            if ($itens_nf[$item->codigo] >= $item->quantidade) {
+                                $itens_nf[$item->codigo] = $itens_nf[$item->codigo] - $item->quantidade;
+                            } else {
+                                $itens_nf[$item->codigo] = 0;
+                            }
+
+                            // echo "DEPOIS--ITEM COD: $item->codigo - QTDE PENDENTE: " . $itens_nf[$item->codigo] . ' <hr>';
+                        }
                     }
                 }
                 usleep(200000);
@@ -220,9 +268,10 @@ while ($bling_api_cod_erro == 0) {
     21	Em digitação
     24	Verificado
     10928	Amostras e Bonificações
+    37589 Pedido faturado parcialmente
     */
-    
-    $url = "https://api.bling.com.br/Api/v3/pedidos/vendas?pagina=$api_pagina&idsSituacoes[]=6&idsSituacoes[]=15&idsSituacoes[]=10928";
+
+    $url = "https://api.bling.com.br/Api/v3/pedidos/vendas?pagina=$api_pagina&idsSituacoes[]=6&idsSituacoes[]=15&idsSituacoes[]=10928&idsSituacoes[]=37589";
 
     // echo $url . '<hr>';
 
@@ -287,6 +336,39 @@ while ($bling_api_cod_erro == 0) {
                     // print("<pre>" . print_r($resultado2, true) . "</pre>");
                 } else {
                     $pedido = $resultado2->data;
+
+                    //==== se pedido faturado PARCIALMENTE, buscar os itens pendentes ===
+                    $itens_nf = array();
+                    if ($pedido->situacao->id == 37589) {
+                        $idnfe = $pedido->notaFiscal->id;
+                        echo '<hr> CONSTULTANDO NF PEDIDO FATURADO PARCIALMENTE ID: ' . $idnfe . ' <hr>';
+
+                        //inicializando CURL =================================================================
+                        $url = "https://api.bling.com.br/Api/v3/nfe/$idnfe";
+                        // echo $url . '<hr>';
+                        $curl = curl_init();
+                        curl_setopt_array($curl, array(
+                            CURLOPT_URL => $url,
+                            CURLOPT_RETURNTRANSFER => true,
+                            CURLOPT_HTTPHEADER => array(
+                                'Accept: application/json',
+                                'Authorization: Bearer ' . $token . '',
+                                'Cookie: PHPSESSID=btthevjjl77h84ft9hdn3ikved'
+                            ),
+                        ));
+                        $retornonf = curl_exec($curl);
+                        curl_close($curl);
+                        //finalizando CURL ====================================================================
+                        $retornonf = json_decode($retornonf);
+                        if ($retornonf->data->id > 0) {
+                            foreach ($retornonf->data->itens as $item) {
+                                $itens_nf[$item->codigo] += $item->quantidade;
+                            }
+                        }
+                        echo "ITENS NF: <hr>";
+                        print("<pre>" . print_r($itens_nf, true) . "</pre>");
+                    }
+
                     foreach ($resultado2->data->itens as $item) {
 
                         //calculando total item com desconto
@@ -359,7 +441,8 @@ while ($bling_api_cod_erro == 0) {
                             'item_valor' => $total_item,
                             'item_pv_id' => trim($item->id),
                             'item_ref' => trim($item->codigo),
-                            'item_qtde' => $item->quantidade,
+                            'item_qtde_original' => $item->quantidade,
+                            'item_qtde' => $item->quantidade - $itens_nf[$item->codigo],
                             'item_pesobruto' => $total_peso,
                             'item_pesototal' => $total_peso,
                             'item_volumetotal' => $total_volumes,
@@ -372,13 +455,27 @@ while ($bling_api_cod_erro == 0) {
                             'est_sugest' => '',
                             'op_sugest' => '',
                             'pc_sugest' => '',
-                            'qtde_pend' => $item->quantidade,
+                            'qtde_pend' => $item->quantidade - $itens_nf[$item->codigo],
                             'situacao' => '',
                             'situacao_color' => '',
                             'data_prev' => '',
                             'doc' => '',
-                            'saldo_est' => ''
+                            'saldo_est' => '',
+                            'item_fat_parcial' => isset($itens_nf[$item->codigo]) ? 'SIM' : 'NAO'
                         );
+
+                        //se item parcial abatee
+                        if (isset($itens_nf[$item->codigo])) {
+                            // echo "ANTES--ITEM COD: $item->codigo - QTDE PEDIDO: $item->quantidade - QTDE NF: " . $itens_nf[$item->codigo] . ' <hr>';
+
+                            if ($itens_nf[$item->codigo] >= $item->quantidade) {
+                                $itens_nf[$item->codigo] = $itens_nf[$item->codigo] - $item->quantidade;
+                            } else {
+                                $itens_nf[$item->codigo] = 0;
+                            }
+
+                            // echo "DEPOIS--ITEM COD: $item->codigo - QTDE PENDENTE: " . $itens_nf[$item->codigo] . ' <hr>';
+                        }
                     }
                 }
                 usleep(200000);
