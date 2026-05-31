@@ -41,7 +41,7 @@ class Adp9
                                 ON ( e.id_empresa = se.id_empresa )
                         LEFT JOIN pessoa AS p
                             ON ( iv.id_atendente = p.id_pessoa )
-                WHERE  (data_cupom >= '2024-01-01 09:20:00' AND data_cupom >= '$datetime_last_reg')
+                WHERE  (data_cupom >= '2024-01-01 09:20:00' AND data_cupom >= '$datetime_last_reg'  AND data_cupom < DATE_ADD('$datetime_last_reg', INTERVAL 4 HOUR) )
                         AND v.cnpj_cpf_rodape != '' 
                         AND LENGTH(v.cnpj_cpf_rodape) = 11
                         AND (ci.denominacao != 'CIGARROS')
