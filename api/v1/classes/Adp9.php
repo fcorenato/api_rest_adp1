@@ -2,17 +2,17 @@
 
 class Adp9
 {
-        public function mostrar($parametros)
-        {
-                // Configurações de conexão com o banco de dados
-                require('Adp_conect.php');
+    public function mostrar($parametros)
+    {
+        // Configurações de conexão com o banco de dados
+        require('Adp_conect.php');
 
-                //parametros
-                $dt = DateTime::createFromFormat('Ymd H:i:s', str_replace('+', ' ', $props[0]));
-                $datetime_last_reg = $dt->format('Y-m-d H:i:s');
+        //parametros
+        $props = explode('-', $parametros);
+        $datetime_last_reg= $props[0];
 
-                // 5 - dados vendas geral para CLUBE G7
-                $sql4 = "SELECT v.data_cupom,
+        // 5 - dados vendas geral para CLUBE G7
+        $sql4 = "SELECT v.data_cupom,
                         se.codigo              AS cod_empresa,
                         se.nome                AS nome_fantasia,
                         v.numero_cupom,
@@ -41,7 +41,7 @@ class Adp9
                                 ON ( e.id_empresa = se.id_empresa )
                         LEFT JOIN pessoa AS p
                             ON ( iv.id_atendente = p.id_pessoa )
-                WHERE  (data_cupom >= '2024-01-01 09:20:00' AND data_cupom >= '$datetime_last_reg' AND data_cupom < ('$datetime_last_reg'::timestamp + INTERVAL '4 hours'))
+                WHERE  (data_cupom >= '2024-01-01 09:20:00' AND data_cupom >= '$datetime_last_reg' AND data_cupom < ('$datetime_last_reg'::timestamp + INTERVAL '4 hours') )
                         AND v.cnpj_cpf_rodape != '' 
                         AND LENGTH(v.cnpj_cpf_rodape) = 11
                         AND (ci.denominacao != 'CIGARROS')
@@ -49,21 +49,21 @@ class Adp9
         ";
 
 
-                $sql = $con->prepare($sql4);
-                $sql->execute();
-                //print_r($sql->errorInfo());
-                //echo 'erro <hr>';
-                $resultados = array();
+        $sql = $con->prepare($sql4);
+        $sql->execute();
+        //print_r($sql->errorInfo());
+        //echo 'erro <hr>';
+        $resultados = array();
 
 
-                while ($row = $sql->fetch(PDO::FETCH_ASSOC)) {
-                        $resultados[] = $row;
-                }
-
-                if (!$resultados) {
-                        throw new Exception("Nenhum dado encontrado!");
-                }
-
-                return $resultados;
+        while ($row = $sql->fetch(PDO::FETCH_ASSOC)) {
+            $resultados[] = $row;
         }
+
+        if (!$resultados) {
+            throw new Exception("Nenhum dado encontrado!");
+        }
+
+        return $resultados;
+    }
 }
