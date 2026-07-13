@@ -1,22 +1,10 @@
 <?php
 error_reporting(0);
-date_default_timezone_set('America/Sao_Paulo');
+
 $conectar = 0;
 $count_connect = 0;
 while ($conectar == 0) {
-    if (!mysql_ping($conmysql)) {
-
-        // fecha ligação anterior (mesmo que já não exista, tem que ser fechada)
-        mysql_close($conmysql);
-
-        // volta a ligar
-        $conmysql = mysql_connect("193.203.175.221", "u502413668_finacores_sa", "M1HZ!fp2upFScores");
-
-        // escolhe base de dados
-        $db = mysql_select_db('u502413668_finacasa_cores');
-    }
-
-    $conmysql = mysql_connect("193.203.175.221", "u502413668_finacores_sa", "M1HZ!fp2upFScores");
+    $conmysql = mysql_connect("193.203.175.221","u502413668_finacores_sa","M1HZ!fp2upFScores");
     $db = mysql_select_db('u502413668_finacasa_cores');
     mysql_query("SET NAMES 'utf8'");
     mysql_query('SET character_set_connection=utf8');
@@ -40,9 +28,9 @@ while ($conectar == 0) {
             $email_from = 'biv@vetromani.com.br';
 
             $msg = "<h3>Erro ao conectar ao banco MySQL(Biv)<h3></br>
-                Usuário: $usuario_nome <br />
-                Data: $data <br />
-                Qtde Tentativas = $count_connect";
+            Usuário: $usuario_nome <br />
+            Data: $data <br />
+            Qtde Tentativas = $count_connect";
 
             // emails para quem será enviado o formulário
             $emailenviar = "fco.renatogomes@gmail.com,renato@vetromani.com.br";
@@ -55,10 +43,10 @@ while ($conectar == 0) {
             $headers .= 'From: BIV Vetromani <' . $email_from . '>';
             //$headers .= "Bcc: $EmailPadrao\r\n";
 
-            $enviaremail = mail($destino, $assunto, $msg, $headers);
+            // $enviaremail = mail($destino, $assunto, $msg, $headers);
 
-            // header("location: sys_manut_home.php");
-            echo "Erro ao conectar ao banco MySQL(FINACASA CORES). Tentativas = $count_connect. ";
-        }
+            echo "Erro ao conectar ao banco de dados BIV FINACASA CORES, tente novamente mais tarde!')";
+        } 
     }
 };
+?>
