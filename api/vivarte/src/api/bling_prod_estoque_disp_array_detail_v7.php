@@ -193,6 +193,29 @@ if ($processar_carteira) {
             }
         }
 
+        //cria array com reserva de produto
+        $reserva_prod = array();
+        $pedido_reserva = array();
+        $query1 = "SELECT * FROM md_estoque_reserva WHERE status = 'A'";
+        $result_query1 = mysql_query($query1);
+        $qtde_query1 = mysql_num_rows($result_query1);
+        if ($qtde_query1 > 0) {
+            while ($campos = mysql_fetch_array($result_query1)) {
+                $reserva_prod[trim($campos['pv_id'] . '-' . $campos['item_pv_id'] . '-' . $campos['referencia'] . '-' . $campos['local'])] += $campos['qtde_reserva'];
+                $pedido_reserva[$campos['pv_id']] += $campos['qtde_reserva'];
+            }
+        }
+        //exibir reservas
+        echo '<hr>Reservas: <br>';
+        print("<pre>" . print_r($reserva_prod, true) . "</pre>");
+        echo '<br> qtde:' . $reserva_prod['25911918646-19525725568-KACS2060-VC-PA'] . '<hr>';
+        $reserva_item = $reserva_prod['25911918646-19525725568-KACS2060-VM-PA'];
+        echo '<br> Reserva de item maior que zero:' . $reserva_item . '<br>';
+        print("<pre>" . print_r($pedido_reserva, true) . "</pre>");
+        echo '<br> qtde:' . $pedido_reserva['25911918646'] . '<hr>';
+
+        echo '<br>FIM Reservas: <hr>';
+
 
         //limpando dados de atualizacao da tabela OP
         $limpa_tabela = mysql_query("UPDATE md_prog_op SET updated_at= NULL WHERE status = 'A'") or die(mysql_error());
@@ -291,7 +314,128 @@ if ($processar_carteira) {
         }
         // print("<pre>" . print_r($venda_prod_array, true) . "</pre>");
 
-        //percorrendo array de pedidos para processar atendimento com estoque, OP e PC
+        //  =============== (0.1) 0 - Verificando RESERVAS  ============
+        // 0.1 reservas - percorrendo array de pedidos para processar atendimento com reservas
+        $reserva_item = 0;
+        foreach ($pedido_vendas_array as $key_ped => $value_ped) {
+            $qtde_atender = round($value_ped['qtde_pend'], 2);
+            $qtde_pendente_pv = $qtde_atender;
+            $qtde_sugerida_estoque = 0;
+            $destacar_estoque = '';
+            $destacar_op = '';
+            $destacar_pc = '';
+            $reserva_item = 0;
+
+            //apenas se tiver reserva para o pedido da vez
+            if ($pedido_reserva[trim($value_ped['ped_id'])] > 0) {
+                $atender_pedidovenda = TRUE;
+
+
+
+                //  =============== (0.1) 0 - Verificando RESERVAS  ============
+                $reserva_item = 0;
+                if ($qtde_pendente_pv > 0 and $atender_pedidovenda) {
+
+                    $destacar_estoque = '';
+                    $saldo_disp_atu_item_corrent = 0;
+                    $dep_est_atende = '';
+
+                    if ($atender_parcial_estoque) {
+                        print("<pre>" . print_r($estoquedisp, true) . "</pre>");
+
+                        foreach ($estoquedisp as $key_estoq => $value_estoq) {
+                            //so atende estoque como prioridade se tiver reserva
+                            $key_pesq = trim($value_ped['ped_id'] . '-' . $value_ped['item_pv_id'] . '-' . $value_estoq['ref'] . '-' . $value_estoq['deposito']);
+                            // echo '<br> key_pesq:' . $key_pesq . ' -  $reserva_prod['.$key_pesq.']<br>';
+                            $reserva_item = $reserva_prod[$key_pesq];
+
+                            //se tem reserva para o item
+                            if ($reserva_item > 0) {
+                                echo "<br>Verificando reserva para pedido: " . $value_ped['ped_num'] . " (Ped_id: " . $value_ped['ped_id'] . " - item_id: " . $value_ped['item_pv_id'] . ") ref: " . $value_ped['item_ref'] . " - qtde pendente: $qtde_pendente_pv  - Local: " . $value_estoq['deposito'] . " Reserva qtde: " . $reserva_item . "<br>";
+
+                                if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] > 0 and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET' and $value_estoq['deposito'] != 'VC-OUTLET')) {
+                                    echo '<br>Reserva atendida!<br>';
+                                    $saldo_disp_atu_item_corrent_calc1 = round($value_estoq['saldo_disp_atu'], 2) - $reserva_item;
+                                    $qtde_sugerida_item_atual = 0;
+                                    //nao deixar saldo ficar negativo
+                                    if ($saldo_disp_atu_item_corrent_calc1 < 0) {
+                                        $saldo_disp_atu_item_corrent = 0;
+                                        $qtde_pendente_pv = $qtde_pendente_pv - round($reserva_item, 2);
+                                        $qtde_sugerida_estoque += round($reserva_item, 2);
+                                        $qtde_sugerida_item_atual = round($reserva_item, 2);
+                                    } else {
+                                        $saldo_disp_atu_item_corrent = $saldo_disp_atu_item_corrent_calc1;
+                                        $qtde_sugerida_estoque += round($reserva_item, 2);
+                                        $qtde_sugerida_item_atual += round($reserva_item, 2);
+                                        $qtde_pendente_pv = $qtde_pendente_pv - round($reserva_item, 2);
+                                    }
+                                    echo '<br> antes reserva key ' . $key_estoq . ':<br>';
+                                    print("<pre>" . print_r($estoquedisp[$key_estoq], true) . "</pre>");
+                                    $estoquedisp[$key_estoq]['saldo_disp_atu'] = $saldo_disp_atu_item_corrent;
+                                    echo '<br> Depois reserva:<br>';
+                                    print("<pre>" . print_r($estoquedisp[$key_estoq], true) . "</pre>");
+
+
+                                    $destacar_estoque = 'style="background-color: LightGreen;"';
+                                    $dep_est_atende .= $estoquedisp[$key_estoq]['deposito'] . ' (' . number_format($reserva_item,    2, ',', '.') . ') ';
+
+
+                                    $pedido_vendas_array[$key_ped]['est_sugest'] = $qtde_sugerida_estoque;
+
+                                    //verificando status do item
+                                    $ped_item_status = '';
+                                    $ped_item_status_color = 'style=""';
+
+                                    if ($qtde_pendente_pv > 0 and $qtde_sugerida_op == 0 and $qtde_sugerida_PC == 0) {
+                                        $ped_item_status = 'PRODUZIR';
+                                        $ped_item_status_color = 'style="background-color: orange;color:#ffff;"';
+                                    } else if ($qtde_pendente_pv == 0 and $qtde_sugerida_op > 0) {
+                                        $ped_item_status = 'PROGRAMADO';
+                                        $ped_item_status_color = 'style=""';
+                                    } else if ($qtde_pendente_pv == 0 and $qtde_sugerida_pc > 0) {
+                                        $ped_item_status = 'PROGRAMADO AGAS';
+                                        $ped_item_status_color = 'style=""';
+                                    } else if ($qtde_pendente_pv > 0 and ($qtde_sugerida_pc > 0 or $qtde_sugerida_op > 0)) {
+                                        $ped_item_status = 'PRODUZIR';
+                                        $ped_item_status_color = 'style="background-color: orange;color:#ffff;"';
+                                    } else {
+                                        if (strpos($dep_est_atende, 'AG-PA')) {
+                                            $ped_item_status = 'ATENDIDO(AG)';
+                                            $ped_item_status_color = 'style=""';
+                                        } else {
+                                            $ped_item_status = 'ATENDIDO';
+                                            $ped_item_status_color = 'style=""';
+                                        }
+                                    }
+
+
+                                    //atualizando array pedido com dados calculados
+                                    $pedido_vendas_array[$key_ped]['qtde_pend'] = $qtde_pendente_pv;
+                                    $pedido_vendas_array[$key_ped]['situacao'] = $ped_item_status;
+                                    $pedido_vendas_array[$key_ped]['situacao_color'] = $ped_item_status_color;
+                                    $pedido_vendas_array[$key_ped]['data_prev'] = $item_data_prev_op . $item_data_prev_pc;
+                                    $pedido_vendas_array[$key_ped]['doc'] .= '<i class="fas fa-registered"></i>' . $dep_est_atende;
+                                    // $pedido_vendas_array[$key_ped]['op'] = $item_doc_op_json;
+                                    $pedido_vendas_array[$key_ped]['op_num_assoc'] = $item_doc_op;
+                                    $pedido_vendas_array[$key_ped]['saldo_est'] = $reserva_item;
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+
+                // ======== fim do  0.2 - Verificando RESERVAS  ==========
+
+
+
+
+            } //END se pedido tem reserva
+
+        } // fim do foreach pedidos 0.1 reservas
+
+        // 0.2 percorrendo array de pedidos para processar atendimento com estoque, OP 
         foreach ($pedido_vendas_array as $key_ped => $value_ped) {
             $atender_pedidovenda = TRUE;
 
@@ -304,7 +448,7 @@ if ($processar_carteira) {
             $destacar_op = '';
             $destacar_pc = '';
 
-            //  =============== (0) 0 - Verificando Ops com pedido indicado na obs  ============
+            //  =============== (0.2) 0 - Verificando Ops com pedido indicado na obs  ============
 
             $qtde_sugerida_op = 0;
             $destacar_op = '';
@@ -389,7 +533,7 @@ if ($processar_carteira) {
             }
             $pedido_vendas_array[$key_ped]['op_sugest'] = $qtde_sugerida_op;
 
-            // ======== fim do  0 - Verificando Ops com pedido indicado na obs  ==========
+            // ======== fim do  0.2 - Verificando Ops com pedido indicado na obs  ==========
 
 
 
@@ -425,11 +569,14 @@ if ($processar_carteira) {
             $pedido_vendas_array[$key_ped]['situacao'] = $ped_item_status;
             $pedido_vendas_array[$key_ped]['situacao_color'] = $ped_item_status_color;
             $pedido_vendas_array[$key_ped]['data_prev'] = $item_data_prev_op . $item_data_prev_pc;
-            $pedido_vendas_array[$key_ped]['doc'] = $dep_est_atende . $item_doc_atend_op . $item_doc_atend_pc;
+            $pedido_vendas_array[$key_ped]['doc'] .= $item_doc_atend_op;
             // $pedido_vendas_array[$key_ped]['op'] = $item_doc_op_json;
             $pedido_vendas_array[$key_ped]['op_num_assoc'] = $item_doc_op;
             $pedido_vendas_array[$key_ped]['saldo_est'] = $saldo_disp_atu_item_corrent;
         } // fim do foreach pedidos
+
+        echo '<br> Depois reserva final:<br>';
+        print("<pre>" . print_r($estoquedisp, true) . "</pre>");
 
         //FOREACH2 PEDIDOS 
         echo "FOREACH2 ======================<br>";
@@ -851,7 +998,7 @@ if ($processar_carteira) {
                 $sql = "
                 INSERT INTO md_vendas_carteira (
                     pv_id, item_pv_id, bling_emp, ud, ped_bling, orc_biv, nome_cliente, emissao, entrega, cond_pgto,
-                    valor_rs_com_ipi, produto, qtde_pedido, est_sugest, op_sugest,
+                    valor_rs_com_ipi, produto, qtde_pedido_original, qtde_pedido, est_sugest, op_sugest,
                     pc_sugest, qtde_pend, situacao, situacao_color, data_prev, doc, op_num, op_sugerida,
                     saldo_est, tipo_cli, uf, cidade, bairro, volume, peso_bruto,
                     frete, msg_nota, obs_ped_cli, created_at, updated_at 
@@ -868,6 +1015,7 @@ if ($processar_carteira) {
                     '" . mysql_real_escape_string($value_ped['cond_pgto']) . "',
                     '" . mysql_real_escape_string($item_valor_cipi) . "',
                     '" . mysql_real_escape_string($value_ped['item_ref']) . "',
+                    '" . mysql_real_escape_string($value_ped['item_qtde_original']) . "',
                     '" . mysql_real_escape_string($value_ped['item_qtde']) . "',
                     '" . mysql_real_escape_string($value_ped['est_sugest']) . "',
                     '" . mysql_real_escape_string($value_ped['op_sugest']) . "',
@@ -900,6 +1048,7 @@ if ($processar_carteira) {
                     cond_pgto         = VALUES(cond_pgto),
                     valor_rs_com_ipi  = VALUES(valor_rs_com_ipi),
                     produto           = VALUES(produto),
+                    qtde_pedido_original = VALUES(qtde_pedido_original),
                     qtde_pedido       = VALUES(qtde_pedido),
                     est_sugest        = VALUES(est_sugest),
                     op_sugest         = VALUES(op_sugest),
@@ -932,115 +1081,7 @@ if ($processar_carteira) {
                     die('Erro no INSERT: ' . mysql_error());
                 }
 
-                // =========================================================================================
-                //inserindo itens na tabela md_prog_carteira_fila
-                if ($value_ped['situacao'] != "ATENDIDO") {
 
-                    //retirando ultima virgula no final da string $value_ped['op']
-                    $item_op = substr($value_ped['op'], 0, -1);
-                    $item_doc_op_json = "[" . substr($value_ped['op'], 0, -1) . "]";
-                    // $item_op = '';
-
-                    $sql = "
-                    INSERT INTO md_prog_carteira_fila (id, item_pv_id, emp, pedido_bling, pedido_biv, cliente_nome, data_emissao, data_entrega, produto, materia_prima, consumo_mp, modelo_caixa, consumo_caixa, espessura, qtde_etapa, qtde_pedido, qtde_pendente, situacao, doc, maquina1, fila_qtde, fila, fila_status, op_num, op_sugerida, data_inicio, data_fim, status,created_at,updated_at) VALUES (
-                        NULL,
-                        '" . mysql_real_escape_string($value_ped['item_pv_id']) . "',
-                        '" . mysql_real_escape_string($ud_array[$value_ped['ped_ud']]) . "',
-                        '" . mysql_real_escape_string($value_ped['ped_num']) . "',
-                        '" . mysql_real_escape_string($value_ped['ped_web_num']) . "',
-                        '" . mysql_real_escape_string($value_ped['cliente_nome']) . "',
-                        '" . mysql_real_escape_string($value_ped['ped_emissao']) . "',
-                        '" . mysql_real_escape_string($ped_data_prev) . "',
-                        '" . mysql_real_escape_string($value_ped['item_ref']) . "',
-                        '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['materia_prima']) . "',
-                        '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['consumo_mp']) . "',
-                        '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['modelo_caixa']) . "',
-                        '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['consumo_caixa']) . "',
-                        '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['espessura']) . "',
-                        '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['qtde_etapa']) . "',
-                        '" . mysql_real_escape_string($value_ped['item_qtde']) . "',
-                        '" . mysql_real_escape_string($value_ped['qtde_pend']) . "',
-                        '" . mysql_real_escape_string($value_ped['situacao']) . "',
-                        '" . mysql_real_escape_string($value_ped['doc']) . "',
-                        '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['maquina1']) . "',
-                        '" . mysql_real_escape_string($value_ped['qtde_pend']) . "',
-                        '0',
-                        'A PRODUZIR',
-                        '',
-                         '" . mysql_real_escape_string($item_doc_op_json) . "',
-                        NULL,
-                        NULL,
-                        'A', 
-                        '" . date("Y-m-d H:i:s") . "',
-                        '" . date("Y-m-d H:i:s")  . "'
-                    ) ON DUPLICATE KEY UPDATE
-                        pedido_bling       = VALUES(pedido_bling),
-                        pedido_biv         = VALUES(pedido_biv),
-                        cliente_nome       = VALUES(cliente_nome),
-                        data_emissao       = VALUES(data_emissao),
-                        data_entrega       = VALUES(data_entrega),
-                        produto            = VALUES(produto),    
-                        materia_prima      = VALUES(materia_prima),
-                        consumo_mp         = VALUES(consumo_mp),
-                        modelo_caixa       = VALUES(modelo_caixa),
-                        consumo_caixa      = VALUES(consumo_caixa),
-                        espessura          = VALUES(espessura),
-                        qtde_etapa         = VALUES(qtde_etapa),
-                        qtde_pedido        = VALUES(qtde_pedido),
-                        qtde_pendente      = VALUES(qtde_pendente),
-                        situacao           = VALUES(situacao),
-                        doc                = VALUES(doc),
-                        maquina1           = VALUES(maquina1),
-                        status             = VALUES(status),
-                        op_sugerida        = VALUES(op_sugerida),
-                        updated_at = NOW()
-                    ";
-
-                    echo '<hr>inserindou ou atualiznado md_prog_carteira_fila: <br>' . $sql . '<br><br>
-                     MP: ' . $ficha_produto[$value_ped['item_ref']]['materia_prima'] . '<hr>';
-
-                    $result = mysql_query($sql);
-
-                    if (!$result) {
-                        die('Erro no INSERT: ' . mysql_error());
-                    }
-                } else {
-                    //se item ATENDIDO atualiza ele se estiver na md_prog_carteira_fila
-                    $sql = " 
-                        UPDATE md_prog_carteira_fila SET
-                            pedido_bling   = '" . mysql_real_escape_string($value_ped['ped_num']) . "',
-                            pedido_biv     = '" . mysql_real_escape_string($value_ped['ped_web_num']) . "',
-                            cliente_nome   = '" . mysql_real_escape_string($value_ped['cliente_nome']) . "',
-                            data_emissao   = '" . mysql_real_escape_string($value_ped['ped_emissao']) . "',
-                            data_entrega   = '" . mysql_real_escape_string($ped_data_prev) . "',
-                            produto        = '" . mysql_real_escape_string($value_ped['item_ref']) . "',
-                            materia_prima  = '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['materia_prima']) . "',
-                            consumo_mp     = '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['consumo_mp']) . "',
-                            modelo_caixa   = '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['modelo_caixa']) . "',
-                            consumo_caixa  = '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['consumo_caixa']) . "',
-                            espessura      = '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['espessura']) . "',
-                            qtde_etapa     = '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['qtde_etapa']) . "',
-                            qtde_pedido    = '" . mysql_real_escape_string($value_ped['item_qtde']) . "',
-                            qtde_pendente  = '" . mysql_real_escape_string($value_ped['qtde_pend']) . "',
-                            fila_qtde      = '" . mysql_real_escape_string($value_ped['qtde_pend']) . "',
-                            situacao       = '" . mysql_real_escape_string($value_ped['situacao']) . "',
-                            doc            = '" . mysql_real_escape_string($value_ped['doc']) . "',
-                            maquina1       = '" . mysql_real_escape_string($ficha_produto[$value_ped['item_ref']]['maquina1']) . "',
-                            status         = 'A',
-                            op_sugerida    = '',
-                            updated_at     = NOW()
-                        WHERE item_pv_id = '" . mysql_real_escape_string($value_ped['item_pv_id']) . "'
-                    ";
-
-                    echo '<hr>Atualiznado md_prog_carteira_fila: <br>' . $sql . '<br><br>
-                     MP: ' . $ficha_produto[$value_ped['item_ref']]['materia_prima'] . '<hr>';
-
-                    $result = mysql_query($sql);
-
-                    if (!$result) {
-                        die('Erro no UPDATE: ' . mysql_error());
-                    }
-                }
 
 
                 $carteira_processada .= '
@@ -1869,12 +1910,10 @@ $result2 = mysql_query($query_rel_cart2) or die(mysql_error());
 include_once('../../src/api/bv3_pv_status_get.php');
 
 //VERIFICANDO OPS NÃO ATUALIZADOS
-// include_once('../../src/api/bv3_op_status_get.php');
+include_once('../../src/api/bv3_op_status_get.php');
 
 echo 'fim';
 //fim do cronometro
 $fim2 = microtime(true);
 $tempoExecucao2 = $fim2 - $inicio2;
 printf("<hr>O script levou %f segundos para finalizar.\n", $tempoExecucao2);
-
-?>

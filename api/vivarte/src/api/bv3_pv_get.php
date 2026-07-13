@@ -61,10 +61,15 @@ while ($bling_api_cod_erro == 0) {
             $api_qtde_pedido++;
             foreach ($resultado->data as $pvs) {
                 $pv_id = $pvs->id;
+                //se $pv_id = 25663973612 pular
+                if ($pv_id == '25663973612') {
+                    continue;
+                }
+
                 $pv_num = $pvs->numero;
                 $totalpedidos++;
-                // echo $pv_id . '<br>';
-                // echo $op_num . '<br>';
+                // echo '<br> pedido id:' . $pv_id . '<br>';
+                // echo ' pedido num:' .$pv_num . '<br>';
 
                 //buscar produtos do pedido de venda:
                 //inicializando CURL =================================================================
@@ -101,7 +106,7 @@ while ($bling_api_cod_erro == 0) {
                     $itens_nf = array();
                     if ($pedido->situacao->id == 37589) {
                         $idnfe = $pedido->notaFiscal->id;
-                        echo '<hr> CONSTULTANDO NF PEDIDO FATURADO PARCIALMENTE ID: ' . $idnfe . ' <hr>';
+                        echo '<hr> CONSTULTANDO NF ' . $pv_num . ' PEDIDO FATURADO PARCIALMENTE ID: ' . $idnfe . ' <hr>';
 
                         //inicializando CURL =================================================================
                         $url = "https://api.bling.com.br/Api/v3/nfe/$idnfe";
@@ -333,7 +338,7 @@ while ($bling_api_cod_erro == 0) {
                     botc_enviar($msg);
 
                     // echo $msg;
-                    // print("<pre>" . print_r($resultado2, true) . "</pre>");
+                    print("<pre>" . print_r($resultado2, true) . "</pre>");
                 } else {
                     $pedido = $resultado2->data;
 
@@ -341,7 +346,7 @@ while ($bling_api_cod_erro == 0) {
                     $itens_nf = array();
                     if ($pedido->situacao->id == 37589) {
                         $idnfe = $pedido->notaFiscal->id;
-                        echo '<hr> CONSTULTANDO NF PEDIDO FATURADO PARCIALMENTE ID: ' . $idnfe . ' <hr>';
+                        echo '<hr> CONSTULTANDO NF ' . $pv_num . ' PEDIDO FATURADO PARCIALMENTE ID: ' . $idnfe . ' <hr>';
 
                         //inicializando CURL =================================================================
                         $url = "https://api.bling.com.br/Api/v3/nfe/$idnfe";
@@ -362,7 +367,12 @@ while ($bling_api_cod_erro == 0) {
                         $retornonf = json_decode($retornonf);
                         if ($retornonf->data->id > 0) {
                             foreach ($retornonf->data->itens as $item) {
-                                $itens_nf[$item->codigo] += $item->quantidade;
+                                //corrigindo manualmente pedido 804 nf: 26162814347 produto PLB1010
+                                if ($item->codigo == 'PLB1010' and $idnfe == '26162814347') {
+                                    $itens_nf[$item->codigo] += ($item->quantidade + 34.38);
+                                } else {
+                                    $itens_nf[$item->codigo] += $item->quantidade;
+                                }
                             }
                         }
                         echo "ITENS NF: <hr>";

@@ -11,12 +11,17 @@ $pedido_nao_atualizado = mysql_query("SELECT pv_id, bling_emp, produto FROM md_v
 echo 'Qtde pedidos nao atualizados: ' . mysql_num_rows($pedido_nao_atualizado) . '<br>';
 $array_pvs = array();
 while ($pvs = mysql_fetch_object($pedido_nao_atualizado)) {
+    if ($pvs->pv_id == '25663973612') {
+        echo '<hr> Pulando PV ID: ' . $pvs->pv_id . ' - Empresa: ' . $pvs->bling_emp . '<br> ';
+        continue;
+    }
     $array_pvs[$pvs->pv_id] = $pvs->bling_emp;
 }
 
 print("<pre>" . print_r($array_pvs, true) . "</pre>");
 
 foreach ($array_pvs as $pv_id => $bling_emp) {
+
 
     echo '<hr>Buscando dados do PV ID: ' . $pv_id . ' - Empresa: ' . $bling_emp . '<br> ';
 
@@ -205,5 +210,4 @@ foreach ($dados_pedido as $pv) {
     ";
     echo '<hr>' . $sql;
     mysql_query($sql) or die(mysql_error());
-    
 }
