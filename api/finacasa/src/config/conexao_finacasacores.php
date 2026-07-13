@@ -10,13 +10,13 @@ while ($conectar == 0) {
         mysql_close($conmysql);
 
         // volta a ligar
-        $conmysql = mysql_connect("srv950.hstgr.io", "u502413668_finacores_sa", "M1HZ!fp2upFScores");
+        $conmysql = mysql_connect("193.203.175.221", "u502413668_finacores_sa", "M1HZ!fp2upFScores");
 
         // escolhe base de dados
         $db = mysql_select_db('u502413668_finacasa_cores');
     }
 
-    $conmysql = mysql_connect("srv950.hstgr.io", "u502413668_finacores_sa", "M1HZ!fp2upFScores");
+    $conmysql = mysql_connect("193.203.175.221", "u502413668_finacores_sa", "M1HZ!fp2upFScores");
     $db = mysql_select_db('u502413668_finacasa_cores');
     mysql_query("SET NAMES 'utf8'");
     mysql_query('SET character_set_connection=utf8');
@@ -57,7 +57,8 @@ while ($conectar == 0) {
 
             $enviaremail = mail($destino, $assunto, $msg, $headers);
 
-            header("location: sys_manut_home.php");
+            // header("location: sys_manut_home.php");
+            echo "Erro ao conectar ao banco MySQL(FINACASA CORES). Tentativas = $count_connect. ";
         }
     }
 };
