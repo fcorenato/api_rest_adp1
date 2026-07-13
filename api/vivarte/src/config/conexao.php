@@ -1,6 +1,6 @@
 <?php
-error_reporting(0);
 date_default_timezone_set('America/Sao_Paulo');
+error_reporting(0);
 $conectar = 0;
 $count_connect = 0;
 while ($conectar == 0) {
@@ -10,13 +10,13 @@ while ($conectar == 0) {
         mysql_close($conmysql);
 
         // volta a ligar
-        $conmysql = mysql_connect("srv950.hstgr.io", "u502413668_bivsa", "M1HZ!fp2upFS");
+        $conmysql = mysql_connect("193.203.175.221", "u502413668_bivsa", "M1HZ!fp2upFS");
 
         // escolhe base de dados
         $db = mysql_select_db('u502413668_biv_vivarte');
     }
-
-    $conmysql = mysql_connect("srv950.hstgr.io", "u502413668_bivsa", "M1HZ!fp2upFS");
+    
+    $conmysql = mysql_connect("193.203.175.221","u502413668_bivsa","M1HZ!fp2upFS");
     $db = mysql_select_db('u502413668_biv_vivarte');
     mysql_query("SET NAMES 'utf8'");
     mysql_query('SET character_set_connection=utf8');
@@ -58,8 +58,9 @@ while ($conectar == 0) {
             $enviaremail = mail($destino, $assunto, $msg, $headers);
 
             // header("location: sys_manut_home.php");
-            echo 'Erro ao conectar ao banco MySQL(Biv). Tentativas = ' . $count_connect . '. Evento reportado via email.';
+            echo 'API: Erro ao conectar ao banco MySQL(Biv). Tentativas = ' . $count_connect . '. ';
 
-        }
+        } 
     }
 };
+?>
