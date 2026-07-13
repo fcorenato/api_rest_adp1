@@ -57,7 +57,8 @@ while ($conectar == 0) {
 
             $enviaremail = mail($destino, $assunto, $msg, $headers);
 
-            header("location: sys_manut_home.php");
+            // header("location: sys_manut_home.php");
+            echo 'Nao foi possivel conectar ao banco mysql DEV';
 
         }
     }

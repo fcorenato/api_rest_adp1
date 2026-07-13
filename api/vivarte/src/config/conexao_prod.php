@@ -57,7 +57,8 @@ while ($conectar == 0) {
 
             $enviaremail = mail($destino, $assunto, $msg, $headers);
 
-            header("location: sys_manut_home.php");
+            // header("location: sys_manut_home.php");
+            echo 'Erro ao conectar ao banco MySQL(Biv). Tentativas = ' . $count_connect . '. Evento reportado via email.';
 
         }
     }
