@@ -83,7 +83,7 @@ if ($processar_carteira) {
         //criar array com dados do produto:
         echo 'Criar array com dados do produto:<br>';
         $query1 = "SELECT * FROM md_cad_produtos";
-        $result_query1 = mysql_query($query1);
+        $result_query1 = mysql_query($query1) or die(mysql_error());
         $qtde_query1 = mysql_num_rows($result_query1);
         echo "qtde_query1: " . $qtde_query1 . "<br>";
         if ($qtde_query1 > 0) {
