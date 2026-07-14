@@ -211,8 +211,8 @@ $pedido_vendas_array = sortArray($pedido_vendas_array_api);
 
 //fim do cronometro
 $fim_pv_get = microtime(true);
-// $tempoExecucao_pv_get = $fim_pv_get - $inicio_pv_get;
-// printf("<hr>O script PV_GET levou %f segundos para finalizar.\n", $tempoExecucao_pv_get);
-// echo '<hr> total de paginas: ' . $totalpaginas . ' e total pedidos: ' . $totalpedidos;
+$tempoExecucao_pv_get = $fim_pv_get - $inicio_pv_get;
+printf("<hr>O script PV_GET levou %f segundos para finalizar.\n", $tempoExecucao_pv_get);
+echo '<hr> total de paginas: ' . $totalpaginas . ' e total pedidos: ' . $totalpedidos;
 
-// print("<pre>" . print_r($pedido_vendas_array, true) . "</pre>");
+print("<pre>" . print_r($pedido_vendas_array, true) . "</pre>");
