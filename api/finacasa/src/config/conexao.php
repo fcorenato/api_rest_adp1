@@ -26,7 +26,7 @@ while ($conectar == 0) {
 
 
     if ($conmysql && $db) {
-        echo 'Parabens!! A conexão ao banco de dados ocorreu normalmente!';
+        echo 'Parabens!! A conexão ao banco de dados ocorreu normalmente!<br>';
         $conectar = 1;
     } else {
         //echo 'Nao foi possivel conectar ao banco mysql';

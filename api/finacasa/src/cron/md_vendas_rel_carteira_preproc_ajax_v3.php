@@ -85,6 +85,7 @@ if ($processar_carteira) {
         $query1 = "SELECT * FROM md_cad_produtos";
         $result_query1 = mysql_query($query1);
         $qtde_query1 = mysql_num_rows($result_query1);
+        echo "qtde_query1: " . $qtde_query1;
         if ($qtde_query1 > 0) {
             while ($campos = mysql_fetch_array($result_query1)) {
                 $prod_array_ipi[trim($campos['referencia'])] = $campos['ipi'];
