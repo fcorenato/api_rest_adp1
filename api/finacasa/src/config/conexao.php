@@ -1,6 +1,6 @@
 <?php
-error_reporting(0);
 date_default_timezone_set('America/Sao_Paulo');
+error_reporting(0);
 $conectar = 0;
 $count_connect = 0;
 while ($conectar == 0) {
@@ -15,9 +15,9 @@ while ($conectar == 0) {
         // escolhe base de dados
         $db = mysql_select_db('u502413668_biv_finacasa');
     }
-
+    
     $conmysql = mysql_connect("193.203.175.221", "u502413668_bivsa_finacasa", "M1HZ!fp2upFS");
-    $db = mysql_select_db('u502413668_biv_finacasa');
+     $db = mysql_select_db('u502413668_biv_finacasa');
     mysql_query("SET NAMES 'utf8'");
     mysql_query('SET character_set_connection=utf8');
     mysql_query('SET character_set_client=utf8');
@@ -26,7 +26,7 @@ while ($conectar == 0) {
 
 
     if ($conmysql && $db) {
-        echo 'Parabens!! A conexão ao banco de dados ocorreu normalmente!<br>';
+        echo 'Parabens!! A conexão ao banco de dados biv_finacasa ocorreu normalmente!<br>';
         $conectar = 1;
     } else {
         //echo 'Nao foi possivel conectar ao banco mysql';
@@ -40,9 +40,9 @@ while ($conectar == 0) {
             $email_from = 'biv@vetromani.com.br';
 
             $msg = "<h3>Erro ao conectar ao banco MySQL(Biv)<h3></br>
-                Usuário: $usuario_nome <br />
-                Data: $data <br />
-                Qtde Tentativas = $count_connect";
+            Usuário: $usuario_nome <br />
+            Data: $data <br />
+            Qtde Tentativas = $count_connect";
 
             // emails para quem será enviado o formulário
             $emailenviar = "fco.renatogomes@gmail.com,renato@vetromani.com.br";
@@ -58,7 +58,9 @@ while ($conectar == 0) {
             $enviaremail = mail($destino, $assunto, $msg, $headers);
 
             // header("location: sys_manut_home.php");
-            echo "Erro ao conectar ao banco MySQL(Biv FINACASA)";
-        }
+            echo 'API: Erro ao conectar ao banco MySQL(Biv). Tentativas = ' . $count_connect . '. ';
+
+        } 
     }
 };
+?>
