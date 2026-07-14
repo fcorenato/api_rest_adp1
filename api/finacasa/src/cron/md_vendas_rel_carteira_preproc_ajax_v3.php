@@ -2,7 +2,7 @@
 ini_set('mysql.connect_timeout', 300);
 ini_set('default_socket_timeout', 300);
 date_default_timezone_set('America/Sao_Paulo');
-require('../config/conexao.php');
+
 // require('../../src/config/SUsuario.php');
 include_once('../../sys_functions.php');
 
@@ -79,6 +79,7 @@ if ($processar_carteira) {
         echo $carteira_processada;
         exit;
     } else {
+        require('../config/conexao.php');
         //criar array com dados do produto:
         echo 'Criar array com dados do produto:';
         $query1 = "SELECT * FROM md_cad_produtos";
