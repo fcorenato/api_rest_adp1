@@ -91,6 +91,9 @@ if ($processar_carteira) {
                 $prod_array_qtdecx[trim($campos['referencia'])] = $campos['qtde_cx'];
             }
         }
+        echo "print prod_array_qtdecx: ";
+        print("<pre>" . print_r($prod_array_qtdecx, true) . "</pre>");
+
         //incluindo IPI no valor do item
         $item_valor_total =  $value['item_valor'] + ($value['item_valor'] * $prod_array_ipi[$value['item_ref']] / 100);
 
