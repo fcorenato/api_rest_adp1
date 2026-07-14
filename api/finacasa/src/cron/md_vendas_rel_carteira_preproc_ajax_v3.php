@@ -26,7 +26,9 @@ $pesquisa_por_cliente  = '';
 $pesquisa_por_unidade  = '';
 $imprimi_apenas_resumo_ref = FALSE;
 $imprimi_valores = TRUE; //imprimir valores R$ na carteira
-// ============== (4) PROCESSAR CARTEIRA     ====================================
+
+
+// ============== PROCESSAR CARTEIRA     ====================================
 // FUNCAO PARA GERAR TIMESTAMP E CALCULCAR DIFERENCA ENTRE DATAS NO FORMATO DD/MM/AAAA
 function geraTimestamp($data)
 {
@@ -55,19 +57,14 @@ $total_geral_pc = 0;
 if ($processar_carteira) {
     //chamdada api pedidos get
     // include_once('../../src/api/bling_pedido_vendas_get.php');
-    echo 'Chamando API...';
     include_once('../../src/api/bv3_pv_get.php');
     //chamdada api prod_estoque get
-    // include_once('../../src/api/bling_prod_estoque_biv_get.php');
+    include_once('../../src/api/bling_prod_estoque_biv_get.php');
     //chamdada api Op get
     //include_once('../../src/api/bling_op_get.php');
     //chamdada api PC get
     // include_once('../../src/api/bling_pedido_compras_get.php');
-    // include_once('../../src/api/bv3_pc_get.php');
-
-    
-} // END carteira processada
-
- //  fim do IF  atualizar estoque no BIV ===================================================
+    include_once('../../src/api/bv3_pc_get.php');
+} //  fim do IF  atualizar estoque no BIV ===================================================
 
 echo '<hr> dados processados finalizados v2<hr>';
