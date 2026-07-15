@@ -353,7 +353,7 @@ if ($processar_carteira) {
                             if ($reserva_item > 0) {
                                 echo "<br>Verificando reserva para pedido: " . $value_ped['ped_num'] . " (Ped_id: " . $value_ped['ped_id'] . " - item_id: " . $value_ped['item_pv_id'] . ") ref: " . $value_ped['item_ref'] . " - qtde pendente: $qtde_pendente_pv  - Local: " . $value_estoq['deposito'] . " Reserva qtde: " . $reserva_item . "<br>";
 
-                                if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] > 0 and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET' and $value_estoq['deposito'] != 'VC-OUTLET')) {
+                                if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] > 0 and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET' and $value_estoq['deposito'] != 'VC-OUTLET' and $value_estoq['deposito'] != 'VM-OUTLET')) {
                                     echo '<br>Reserva atendida!<br>';
                                     $saldo_disp_atu_item_corrent_calc1 = round($value_estoq['saldo_disp_atu'], 2) - $reserva_item;
                                     $qtde_sugerida_item_atual = 0;
@@ -612,7 +612,7 @@ if ($processar_carteira) {
 
                     if ($atender_parcial_estoque) {
                         foreach ($estoquedisp as $key_estoq => $value_estoq) {
-                            if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] > 0 and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET' and $value_estoq['deposito'] != 'VC-OUTLET')) {
+                            if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] > 0 and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET' and $value_estoq['deposito'] != 'VC-OUTLET' and $value_estoq['deposito'] != 'VM-OUTLET' )) {
                                 $saldo_disp_atu_item_corrent_calc1 = round($value_estoq['saldo_disp_atu'], 2) - $qtde_pendente_pv;
                                 $qtde_sugerida_item_atual = 0;
                                 //nao deixar saldo ficar negativo
@@ -637,7 +637,7 @@ if ($processar_carteira) {
                         }
                     } else {
                         foreach ($estoquedisp as $key_estoq => $value_estoq) {
-                            if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] >= $qtde_pendente_pv and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET' and $value_estoq['deposito'] != 'VC-OUTLET')) {
+                            if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] >= $qtde_pendente_pv and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET' and $value_estoq['deposito'] != 'VC-OUTLET' and $value_estoq['deposito'] != 'VM-OUTLET')) {
                                 $estoquedisp[$key_estoq]['saldo_disp_atu'] = round($value_estoq['saldo_disp_atu'], 2) - $qtde_pendente_pv;
                                 $saldo_disp_atu_item_corrent = round($value_estoq['saldo_disp_atu'], 2) - $qtde_pendente_pv;
                                 $qtde_sugerida_estoque = $qtde_pendente_pv;
@@ -1795,7 +1795,7 @@ if ($atualiza_estoque_biv) {
 echo '<hr> ====calculando resumo para programação===== <br>';
 // print("<pre>" . print_r($estoquedisp, true) . "</pre>");
 foreach ($estoquedisp as $key_estoq => $value_estoq) {
-    if ($value_estoq['saldo_disp'] > 0 and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET' and $value_estoq['deposito'] != 'VC-OUTLET')) {
+    if ($value_estoq['saldo_disp'] > 0 and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET' and $value_estoq['deposito'] != 'VC-OUTLET' and $value_estoq['deposito'] != 'VM-OUTLET')) {
         //dados para rel programacao ESTOQUE TOTAL
         $prog_estoque[$value_estoq['ref']] += $value_estoq['saldo_disp'];
     }
