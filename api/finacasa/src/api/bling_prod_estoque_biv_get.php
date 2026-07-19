@@ -31,6 +31,4 @@ if ($qtde_query1 != 0) {
     );
 }
 
-print("<pre>" . print_r($estoquedisp, true) . "</pre>");
-
-?>
+//print("<pre>" . print_r($estoquedisp, true) . "</pre>");
