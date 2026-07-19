@@ -59,12 +59,12 @@ if ($processar_carteira) {
     // include_once('../../src/api/bling_pedido_vendas_get.php');
     include_once('../../src/api/bv3_pv_get.php');
     //chamdada api prod_estoque get
-    include_once('../../src/api/bling_prod_estoque_biv_get.php');
+    // include_once('../../src/api/bling_prod_estoque_biv_get.php');
     //chamdada api Op get
     //include_once('../../src/api/bling_op_get.php');
     //chamdada api PC get
     // include_once('../../src/api/bling_pedido_compras_get.php');
-    // include_once('../../src/api/bv3_pc_get.php');
+    include_once('../../src/api/bv3_pc_get.php');
 
     if ($api_qtde_pedido == 0) {
         $carteira_processada = '
