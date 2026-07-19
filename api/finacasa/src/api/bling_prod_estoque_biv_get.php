@@ -7,6 +7,7 @@ $query1 = "select * from md_estoque_bling";
 
 $result_query1 = mysql_query($query1);
 $qtde_query1 = mysql_num_rows($result_query1);
+echo "qtde_query1: " . $qtde_query1 . "<br>";
 
 if ($qtde_query1 != 0) {
     while ($campos = mysql_fetch_array($result_query1)) {
@@ -30,4 +31,4 @@ if ($qtde_query1 != 0) {
     );
 }
 
-//print("<pre>" . print_r($estoquedisp, true) . "</pre>");
+print("<pre>" . print_r($estoquedisp, true) . "</pre>");
