@@ -57,7 +57,7 @@ $total_geral_pc = 0;
 if ($processar_carteira) {
     //chamdada api pedidos get
     // include_once('../../src/api/bling_pedido_vendas_get.php');
-    include_once('../../src/api/bv3_pv_get.php');
+    // include_once('../../src/api/bv3_pv_get.php');
     //chamdada api prod_estoque get
     include_once('../../src/api/bling_prod_estoque_biv_get.php');
     //chamdada api Op get
