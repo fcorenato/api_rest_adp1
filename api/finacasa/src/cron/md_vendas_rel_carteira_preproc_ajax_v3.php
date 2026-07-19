@@ -64,7 +64,7 @@ if ($processar_carteira) {
     //include_once('../../src/api/bling_op_get.php');
     //chamdada api PC get
     // include_once('../../src/api/bling_pedido_compras_get.php');
-    include_once('../../src/api/bv3_pc_get.php');
+    // include_once('../../src/api/bv3_pc_get.php');
 
     if ($api_qtde_pedido == 0) {
         $carteira_processada = '
@@ -79,7 +79,7 @@ if ($processar_carteira) {
         echo $carteira_processada;
         exit;
     } else {
-        // require('../config/conexao.php');
+        require('../config/conexao.php');
         //criar array com dados do produto:
         echo 'Criar array com dados do produto:<br>';
         $query1 = "SELECT * FROM md_cad_produtos";
