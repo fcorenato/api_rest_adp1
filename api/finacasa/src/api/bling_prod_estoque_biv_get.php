@@ -3,7 +3,7 @@
 require('../config/conexao.php');
 
 //gerando relatório
-$query1 = "select * from md_estoque_bling";
+$query1 = "select * from md_estoque_bling where saldo_disp > 0";
 
 $result_query1 = mysql_query($query1);
 $qtde_query1 = mysql_num_rows($result_query1);
@@ -31,4 +31,6 @@ if ($qtde_query1 != 0) {
     );
 }
 
-//print("<pre>" . print_r($estoquedisp, true) . "</pre>");
+print("<pre>" . print_r($estoquedisp, true) . "</pre>");
+
+?>
