@@ -13,32 +13,17 @@ class Adp3
         $data_inicio = $props[1];
         $data_fim = $props[2];
 
-        // 3 - total de venda de produtos sem ser combustivel (por valor) por data, por funcionario        
-        // Venda Lojas
+        // 3 - total de valor de  vendas 'ADITIVOS', 'AUTOMOTIVOS', 'FILTROS', 'LUBRIFICANTES'
         
-        $sql3 = "SELECT mvt.data_movimento,
-                se.codigo as cod_empresa,
-                p.codigo as cod_operador,
-                p.fantasia_codinome as apelido,
-        C.FUNCAO,
-                ci.denominacao as categoria,
-                SUM (IVC.quantidade) as QTD_TOTAL,
-                SUM(IVC.TOTAL_ITEM) AS TOTAL_VALOR
-            FROM	ITEM_VENDA_CF AS IVC
-                INNER JOIN venda_cf AS vc ON vc.id_venda_cf = ivc.id_venda_cf
-                INNER JOIN movimento_venda_terminal AS mvt ON mvt.id_movimento_venda_terminal = vc.id_movimento_venda_terminal
-                INNER JOIN sis_empresa AS se ON mvt.id_empresa = se.id_empresa
-                INNER JOIN item AS i ON ivc.id_item=i.id_item
-                INNER JOIN categoria_item as ci ON ci.id_categoria_item = i.id_categoria_item
-                LEFT JOIN pessoa as P ON P.ID_PESSOA = ivc.id_atendente
-                LEFT JOIN COLABORADOR AS C ON (C.ID_COLABORADOR=P.ID_PESSOA AND C.ID_EMPRESA = '$emp')
-            WHERE vc.cancelada = 'N'
-                AND IVC.CANCELADO = 'N'
-                AND IVC.ID_BICO_COMBUSTIVEL IS NULL
-                AND SE.CODIGO IN ('$emp')  -- identificador da empresa, para saber a lista de cod select * from sis_empresa
-                AND MVT.DATA_MOVIMENTO BETWEEN '$data_inicio' AND '$data_fim'
-            GROUP BY CATEGORIA, COD_OPERADOR, SE.CODIGO, MVT.DATA_MOVIMENTO, P.FANTASIA_CODINOME,C.FUNCAO
-            ORDER BY CATEGORIA, COD_OPERADOR, SE.CODIGO, MVT.DATA_MOVIMENTO, P.FANTASIA_CODINOME";
+        $sql3 = "SELECT SUM(i.valitem) AS total FROM itemped i
+                JOIN produtos pr
+                    ON pr.codpro = i.codpec
+                JOIN grupos g
+                    ON g.codi = pr.codgru
+                JOIN funcionarios f
+                    ON f.matr = i.vei_ds_funcionario
+                WHERE i.dtfiscal BETWEEN '$data_inicio' AND '$data_fim'
+                AND g.grupo IN ('ADITIVOS', 'AUTOMOTIVOS', 'FILTROS', 'LUBRIFICANTES')";
 
 
         $sql = $con->prepare($sql3);
