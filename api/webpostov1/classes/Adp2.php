@@ -43,6 +43,6 @@ class Adp2
             throw new Exception("Nenhum pruduto no estoque!");
         }
 
-        return $resultados;
+        return $sql2;
     }
 }
