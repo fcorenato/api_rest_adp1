@@ -16,33 +16,18 @@ class Adp2
         // 2 - qtde de venda por tipo adminstradora shellbox - correto considerar cupom distintos:
         $sql2 = "SELECT
                 f.matr AS matricula,
-                f.nome AS nome,			
-                COUNT(DISTINCT docu)  AS qtde
+                f.nome AS nome,
+                COUNT(DISTINCT CASE WHEN c.valor <> 0.01 THEN c.cupom END)
+                + COUNT(CASE WHEN c.valor = 0.01 THEN 1 END) AS qtde
             FROM cartes c
-            JOIN administradora a
-                ON a.codadm = c.codadm
-            JOIN funcionarios f
-                ON f.matr = c.matricula
+            JOIN administradora a ON a.codadm = c.codadm
+            JOIN funcionarios f ON f.matr = c.matricula
             WHERE a.codadm IN ('027', '017', '045')
             AND c.movto BETWEEN '$data_inicio' AND '$data_fim'
-            
-            GROUP BY f.matr,f.nome
-            ORDER BY f.matr
+            GROUP BY f.matr, f.nome
+            ORDER BY f.nome;       
         ";
-        // $sql2 = "SELECT
-        //             f.matr AS matricula,
-        //             f.nome AS nome,			
-        //             COUNT(*)  AS qtde
-        //         FROM cartes c
-        //         JOIN administradora a
-        //             ON a.codadm = c.codadm
-        //         JOIN funcionarios f
-        //             ON f.matr = c.matricula
-        //         WHERE a.codadm IN ('027', '017', '045')
-        //         AND c.movto BETWEEN '$data_inicio' AND '$data_fim'
-        //         GROUP BY f.matr,f.nome
-        //         ORDER BY f.matr
-        //     ";
+       
 
         $sql = $con->prepare($sql2);
         $sql->execute();

@@ -14,13 +14,16 @@ class Adp1
         $data_fim= $props[2];
 
         // 1 total de venda de combustivel por tipo de combustivel por frentista
-        $sql1 = "SELECT f.matr AS matricula,f.nome,p.codpro,p.nompro,count(nompro) AS bicadas, sum(litros) litros from abastecimentos a
-                left join produtos p ON a.codpro = p.codpro
-                left join funcionarios f on a.idfrentista = f.matr
-                where data >= '$data_inicio' AND data <= '$data_fim'
-                AND p.codgru = '001'
-                group by f.matr,f.nome,p.codpro,p.nompro
-                order by f.matr,codpro
+        $sql1 = "SELECT f.matr AS matricula, f.nome, p.codpro, p.nompro,
+                COUNT(CASE WHEN a.imprimiu = 'S' THEN 1 END) AS bicadas,
+                SUM(litros) litros
+            FROM abastecimentos a
+            LEFT JOIN produtos p ON a.codpro = p.codpro
+            LEFT JOIN funcionarios f ON a.idfrentista = f.matr
+            WHERE data >= '$data_inicio' AND data <= '$data_fim'
+            AND p.codgru = '001'
+            GROUP BY f.matr, f.nome, p.codpro, p.nompro
+            ORDER BY f.matr, codpro
                 ";
 
         $sql = $con->prepare($sql1);
