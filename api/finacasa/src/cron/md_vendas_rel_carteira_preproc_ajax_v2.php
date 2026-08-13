@@ -424,6 +424,9 @@ if ($processar_carteira) {
 
         //limpado dado de atualizacao dos itens na tabela carteira
         $limpa_tabela_md_vendas_carteira = mysql_query("TRUNCATE md_vendas_carteira") or die(mysql_error());
+         
+        //CARGAS SE PRECISAR AVIVAR NAO PODE LIMPAR TABELA E TEM QUE ATUALIZAR ITENS FATURADOS
+        
         // $limpa_tabela = mysql_query("UPDATE md_vendas_carteira SET updated_at= NULL WHERE situacao NOT IN ('FATURADO','CANCELADO')") or die(mysql_error());
 
         // percorrendo array pedidos ja processado
