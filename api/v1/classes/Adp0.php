@@ -25,7 +25,7 @@ class Adp0
             ON (EQ.ID_EQUIPE=C.ID_EQUIPE)
 
             WHERE C.SITUACAO = '1'
-            AND E.ID_EMPRESA != '290353166'
+            -- AND E.ID_EMPRESA != '290353166'
             ";
             
 
