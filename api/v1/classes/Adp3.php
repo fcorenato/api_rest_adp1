@@ -13,6 +13,11 @@ class Adp3
         $data_inicio = $props[1];
         $data_fim = $props[2];
 
+        //se emp = 011 considera tambem os dados da emp =001
+        if ($emp == 11) {
+            $emp = '011,001';
+        }
+
         // 3 - total de venda de produtos sem ser combustivel (por valor) por data, por funcionario        
         // Venda Lojas
         
