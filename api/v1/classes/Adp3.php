@@ -14,7 +14,7 @@ class Adp3
         $data_fim = $props[2];
 
         //se emp = 011 considera tambem os dados da emp =001
-        $emp_in = $emp;
+        $emp_in = "'" . $emp . "'";
         if ($emp == 11) {
             $emp_in = "'011','001'";
         }
