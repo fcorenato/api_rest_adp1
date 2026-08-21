@@ -41,7 +41,7 @@ class Adp3
             WHERE vc.cancelada = 'N'
                 AND IVC.CANCELADO = 'N'
                 AND IVC.ID_BICO_COMBUSTIVEL IS NULL
-                AND SE.CODIGO IN ('011','001')  -- identificador da empresa, para saber a lista de cod select * from sis_empresa
+                AND SE.CODIGO IN ($emp_in)  -- identificador da empresa, para saber a lista de cod select * from sis_empresa
                 AND MVT.DATA_MOVIMENTO BETWEEN '$data_inicio' AND '$data_fim'
             GROUP BY CATEGORIA, COD_OPERADOR, SE.CODIGO, MVT.DATA_MOVIMENTO, P.FANTASIA_CODINOME,C.FUNCAO
             ORDER BY CATEGORIA, COD_OPERADOR, SE.CODIGO, MVT.DATA_MOVIMENTO, P.FANTASIA_CODINOME";
