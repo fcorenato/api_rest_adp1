@@ -14,8 +14,9 @@ class Adp3
         $data_fim = $props[2];
 
         //se emp = 011 considera tambem os dados da emp =001
+        $emp_in = $emp;
         if ($emp == 11) {
-            $emp = '011,001';
+            $emp_in = "'011','001'";
         }
 
         // 3 - total de venda de produtos sem ser combustivel (por valor) por data, por funcionario        
@@ -40,7 +41,7 @@ class Adp3
             WHERE vc.cancelada = 'N'
                 AND IVC.CANCELADO = 'N'
                 AND IVC.ID_BICO_COMBUSTIVEL IS NULL
-                AND SE.CODIGO IN ('$emp')  -- identificador da empresa, para saber a lista de cod select * from sis_empresa
+                AND SE.CODIGO IN ('$emp_in')  -- identificador da empresa, para saber a lista de cod select * from sis_empresa
                 AND MVT.DATA_MOVIMENTO BETWEEN '$data_inicio' AND '$data_fim'
             GROUP BY CATEGORIA, COD_OPERADOR, SE.CODIGO, MVT.DATA_MOVIMENTO, P.FANTASIA_CODINOME,C.FUNCAO
             ORDER BY CATEGORIA, COD_OPERADOR, SE.CODIGO, MVT.DATA_MOVIMENTO, P.FANTASIA_CODINOME";
