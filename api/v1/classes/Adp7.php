@@ -48,7 +48,7 @@ WHERE  se.codigo in ('001','008')
        AND v.cancelada = 'N'
        AND IV.cancelado = 'N'
        AND (i.denominacao_reduzida = 'S10 AD' OR i.denominacao_reduzida = 'S10AD' OR i.denominacao_reduzida = 'DS10')
-       AND v.data_cupom >= CURRENT_DATE - INTERVAL '30 days'
+       AND v.data_cupom >= CURRENT_DATE - INTERVAL '91 days'
        AND v.numero_cupom = '$numnf' 
             GROUP BY v.data_cupom, se.codigo, se.nome, v.numero_cupom, p.codigo, p.fantasia_codinome,  pp.codigo, pp.nome, i.codigo, i.denominacao, v.checksum, i.denominacao_reduzida, ci.codigo
             ORDER BY se.nome, v.numero_cupom
