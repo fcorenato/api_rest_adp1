@@ -12,8 +12,9 @@ class Adp7
         $emp = $props[0];
         $numnf = $props[1];
 
+        $emp_in = "'" . $emp . "'";
         if ($emp == 11) {
-            $emp = "'001'";
+            $emp_in = "'011','001'";
         }
 
         // 7 - consulta de nf para promo vouche caminhoneiro      
@@ -48,7 +49,7 @@ FROM   item_venda_cf iv
                 ON mvt.id_empresa = se.id_empresa
         INNER JOIN categoria_item ci
                 ON ci.id_categoria_item = i.id_categoria_item
-WHERE  se.codigo = $emp
+WHERE  se.codigo IN ($emp_in)
        AND v.cancelada = 'N'
        AND IV.cancelado = 'N'
        AND (i.denominacao_reduzida = 'S10 AD' OR i.denominacao_reduzida = 'S10AD' OR i.denominacao_reduzida = 'DS10')
