@@ -12,6 +12,10 @@ class Adp7
         $emp = $props[0];
         $numnf = $props[1];
 
+        if ($emp == 11) {
+            $emp = "'001'";
+        }
+
         // 7 - consulta de nf para promo vouche caminhoneiro      
         $sql4 = "SELECT v.data_cupom,
         se.codigo           AS cod_empresa,
@@ -44,7 +48,7 @@ FROM   item_venda_cf iv
                 ON mvt.id_empresa = se.id_empresa
         INNER JOIN categoria_item ci
                 ON ci.id_categoria_item = i.id_categoria_item
-WHERE  se.codigo in ('001','008')
+WHERE  se.codigo = $emp
        AND v.cancelada = 'N'
        AND IV.cancelado = 'N'
        AND (i.denominacao_reduzida = 'S10 AD' OR i.denominacao_reduzida = 'S10AD' OR i.denominacao_reduzida = 'DS10')
