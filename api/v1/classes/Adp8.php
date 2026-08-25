@@ -17,6 +17,7 @@ class Adp8
         $id_emp['006'] = '11072304'; //G7 CASCAVEL
         $id_emp['007'] = '11820375'; //G7 RUSSAS
         $id_emp['008'] = '24949465'; //G7 RETORNO
+        $id_emp['011'] = '291051868'; //G7 RETORNO
 
         //parametros
         $props = explode('-', $parametros);
