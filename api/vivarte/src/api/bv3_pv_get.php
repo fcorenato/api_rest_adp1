@@ -272,11 +272,11 @@ while ($bling_api_cod_erro == 0) {
     18	Venda Agenciada
     21	Em digitação
     24	Verificado
-    10928	Amostras e Bonificações
+    848014	Amostras e Bonificações
     37589 Pedido faturado parcialmente
     */
 
-    $url = "https://api.bling.com.br/Api/v3/pedidos/vendas?pagina=$api_pagina&idsSituacoes[]=6&idsSituacoes[]=15&idsSituacoes[]=10928&idsSituacoes[]=37589";
+    $url = "https://api.bling.com.br/Api/v3/pedidos/vendas?pagina=$api_pagina&idsSituacoes[]=6&idsSituacoes[]=15&idsSituacoes[]=848014&idsSituacoes[]=37589";
 
     // echo $url . '<hr>';
 
