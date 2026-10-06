@@ -105,33 +105,46 @@ while ($bling_api_cod_erro == 0) {
                     //==== se pedido faturado PARCIALMENTE, buscar os itens pendentes ===
                     $itens_nf = array();
                     if ($pedido->situacao->id == 37589) {
-                        $idnfe = $pedido->notaFiscal->id;
-                        echo '<hr> CONSTULTANDO NF ' . $pv_num . ' PEDIDO FATURADO PARCIALMENTE ID: ' . $idnfe . ' <hr>';
 
-                        //inicializando CURL =================================================================
-                        $url = "https://api.bling.com.br/Api/v3/nfe/$idnfe";
-                        // echo $url . '<hr>';
-                        $curl = curl_init();
-                        curl_setopt_array($curl, array(
-                            CURLOPT_URL => $url,
-                            CURLOPT_RETURNTRANSFER => true,
-                            CURLOPT_HTTPHEADER => array(
-                                'Accept: application/json',
-                                'Authorization: Bearer ' . $token . '',
-                                'Cookie: PHPSESSID=btthevjjl77h84ft9hdn3ikved'
-                            ),
-                        ));
-                        $retornonf = curl_exec($curl);
-                        curl_close($curl);
-                        //finalizando CURL ====================================================================
-                        $retornonf = json_decode($retornonf);
-                        if ($retornonf->data->id > 0) {
-                            foreach ($retornonf->data->itens as $item) {
-                                $itens_nf[$item->codigo] += $item->quantidade;
+                        $query_pf = 'SELECT * FROM md_vendas_carteira_fatparc 
+                                    WHERE pv_id = ' . $pv_id . ' AND status = "A"';
+
+                        $result_pf = mysql_query($query_pf);
+
+                        if (mysql_num_rows($result_pf) > 0) {
+                            while ($row_pf = mysql_fetch_array($result_pf)) {
+                                $itens_nf['' . $row_pf['item_pv_id'] . ''] = $row_pf['qtde_fat'];
                             }
                         }
-                        echo "ITENS NF: <hr>";
-                        print("<pre>" . print_r($itens_nf, true) . "</pre>");
+
+                        //==== se pedido faturado PARCIALMENTE, buscar dados da nota via API ===
+                        // $idnfe = $pedido->notaFiscal->id;
+                        // echo '<hr> CONSTULTANDO NF ' . $pv_num . ' PEDIDO FATURADO PARCIALMENTE ID: ' . $idnfe . ' <hr>';
+
+                        // //inicializando CURL =================================================================
+                        // $url = "https://api.bling.com.br/Api/v3/nfe/$idnfe";
+                        // // echo $url . '<hr>';
+                        // $curl = curl_init();
+                        // curl_setopt_array($curl, array(
+                        //     CURLOPT_URL => $url,
+                        //     CURLOPT_RETURNTRANSFER => true,
+                        //     CURLOPT_HTTPHEADER => array(
+                        //         'Accept: application/json',
+                        //         'Authorization: Bearer ' . $token . '',
+                        //         'Cookie: PHPSESSID=btthevjjl77h84ft9hdn3ikved'
+                        //     ),
+                        // ));
+                        // $retornonf = curl_exec($curl);
+                        // curl_close($curl);
+                        // //finalizando CURL ====================================================================
+                        // $retornonf = json_decode($retornonf);
+                        // if ($retornonf->data->id > 0) {
+                        //     foreach ($retornonf->data->itens as $item) {
+                        //         $itens_nf[$item->codigo] += $item->quantidade;
+                        //     }
+                        // }
+                        // echo "ITENS NF: <hr>";
+                        // print("<pre>" . print_r($itens_nf, true) . "</pre>");
                     }
                     foreach ($resultado2->data->itens as $item) {
 
@@ -208,7 +221,7 @@ while ($bling_api_cod_erro == 0) {
                             'item_pv_id' => trim($item->id),
                             'item_ref' => trim($item->codigo),
                             'item_qtde_original' => $item->quantidade,
-                            'item_qtde' => $item->quantidade - $itens_nf[$item->codigo],
+                            'item_qtde' => $item->quantidade - $itens_nf[$item->id],
                             'item_pesobruto' => $total_peso,
                             'item_pesototal' => $total_peso,
                             'item_volumetotal' => $total_volumes,
@@ -221,26 +234,26 @@ while ($bling_api_cod_erro == 0) {
                             'est_sugest' => '',
                             'op_sugest' => '',
                             'pc_sugest' => '',
-                            'qtde_pend' => $item->quantidade - $itens_nf[$item->codigo],
+                            'qtde_pend' => $item->quantidade - $itens_nf[$item->id],
                             'situacao' => '',
                             'situacao_color' => '',
                             'data_prev' => '',
                             'doc' => '',
                             'saldo_est' => '',
-                            'item_fat_parcial' => isset($itens_nf[$item->codigo]) ? 'SIM' : 'NAO'
+                            'item_fat_parcial' => isset($itens_nf[$item->id]) ? 'SIM' : 'NAO'
                         );
 
                         //se item parcial abatee
-                        if (isset($itens_nf[$item->codigo])) {
+                        if (isset($itens_nf[$item->id])) {
                             // echo "ANTES--ITEM COD: $item->codigo - QTDE PEDIDO: $item->quantidade - QTDE NF: " . $itens_nf[$item->codigo] . ' <hr>';
 
-                            if ($itens_nf[$item->codigo] >= $item->quantidade) {
-                                $itens_nf[$item->codigo] = $itens_nf[$item->codigo] - $item->quantidade;
+                            if ($itens_nf[$item->id] >= $item->quantidade) {
+                                $itens_nf[$item->id] = $itens_nf[$item->id] - $item->quantidade;
                             } else {
-                                $itens_nf[$item->codigo] = 0;
+                                $itens_nf[$item->id] = 0;
                             }
 
-                            // echo "DEPOIS--ITEM COD: $item->codigo - QTDE PENDENTE: " . $itens_nf[$item->codigo] . ' <hr>';
+                            // echo "DEPOIS--ITEM COD: $item->codigo - QTDE PENDENTE: " . $itens_nf[$item->id] . ' <hr>';
                         }
                     }
                 }
@@ -345,38 +358,49 @@ while ($bling_api_cod_erro == 0) {
                     //==== se pedido faturado PARCIALMENTE, buscar os itens pendentes ===
                     $itens_nf = array();
                     if ($pedido->situacao->id == 37589) {
-                        $idnfe = $pedido->notaFiscal->id;
-                        echo '<hr> CONSTULTANDO NF ' . $pv_num . ' PEDIDO FATURADO PARCIALMENTE ID: ' . $idnfe . ' <hr>';
+                        $query_pf = 'SELECT * FROM md_vendas_carteira_fatparc 
+                                    WHERE pv_id = ' . $pv_id . ' AND status = "A"';
 
-                        //inicializando CURL =================================================================
-                        $url = "https://api.bling.com.br/Api/v3/nfe/$idnfe";
-                        // echo $url . '<hr>';
-                        $curl = curl_init();
-                        curl_setopt_array($curl, array(
-                            CURLOPT_URL => $url,
-                            CURLOPT_RETURNTRANSFER => true,
-                            CURLOPT_HTTPHEADER => array(
-                                'Accept: application/json',
-                                'Authorization: Bearer ' . $token . '',
-                                'Cookie: PHPSESSID=btthevjjl77h84ft9hdn3ikved'
-                            ),
-                        ));
-                        $retornonf = curl_exec($curl);
-                        curl_close($curl);
-                        //finalizando CURL ====================================================================
-                        $retornonf = json_decode($retornonf);
-                        if ($retornonf->data->id > 0) {
-                            foreach ($retornonf->data->itens as $item) {
-                                //corrigindo manualmente pedido 804 nf: 26162814347 produto PLB1010
-                                if ($item->codigo == 'PLB1010' and $idnfe == '26162814347') {
-                                    $itens_nf[$item->codigo] += ($item->quantidade + 34.38);
-                                } else {
-                                    $itens_nf[$item->codigo] += $item->quantidade;
-                                }
+                        $result_pf = mysql_query($query_pf);
+
+                        if (mysql_num_rows($result_pf) > 0) {
+                            while ($row_pf = mysql_fetch_array($result_pf)) {
+                                $itens_nf['' . $row_pf['item_pv_id'] . ''] = $row_pf['qtde_fat'];
                             }
                         }
-                        echo "ITENS NF: <hr>";
-                        print("<pre>" . print_r($itens_nf, true) . "</pre>");
+
+                        // $idnfe = $pedido->notaFiscal->id;
+                        // echo '<hr> CONSTULTANDO NF ' . $pv_num . ' PEDIDO FATURADO PARCIALMENTE ID: ' . $idnfe . ' <hr>';
+
+                        // //inicializando CURL =================================================================
+                        // $url = "https://api.bling.com.br/Api/v3/nfe/$idnfe";
+                        // // echo $url . '<hr>';
+                        // $curl = curl_init();
+                        // curl_setopt_array($curl, array(
+                        //     CURLOPT_URL => $url,
+                        //     CURLOPT_RETURNTRANSFER => true,
+                        //     CURLOPT_HTTPHEADER => array(
+                        //         'Accept: application/json',
+                        //         'Authorization: Bearer ' . $token . '',
+                        //         'Cookie: PHPSESSID=btthevjjl77h84ft9hdn3ikved'
+                        //     ),
+                        // ));
+                        // $retornonf = curl_exec($curl);
+                        // curl_close($curl);
+                        // //finalizando CURL ====================================================================
+                        // $retornonf = json_decode($retornonf);
+                        // if ($retornonf->data->id > 0) {
+                        //     foreach ($retornonf->data->itens as $item) {
+                        //         //corrigindo manualmente pedido 804 nf: 26162814347 produto PLB1010
+                        //         if ($item->codigo == 'PLB1010' and $idnfe == '26162814347') {
+                        //             $itens_nf[$item->codigo] += ($item->quantidade + 34.38);
+                        //         } else {
+                        //             $itens_nf[$item->codigo] += $item->quantidade;
+                        //         }
+                        //     }
+                        // }
+                        // echo "ITENS NF: <hr>";
+                        // print("<pre>" . print_r($itens_nf, true) . "</pre>");
                     }
 
                     foreach ($resultado2->data->itens as $item) {
@@ -452,7 +476,7 @@ while ($bling_api_cod_erro == 0) {
                             'item_pv_id' => trim($item->id),
                             'item_ref' => trim($item->codigo),
                             'item_qtde_original' => $item->quantidade,
-                            'item_qtde' => $item->quantidade - $itens_nf[$item->codigo],
+                            'item_qtde' => $item->quantidade - $itens_nf[$item->id],
                             'item_pesobruto' => $total_peso,
                             'item_pesototal' => $total_peso,
                             'item_volumetotal' => $total_volumes,
@@ -465,26 +489,26 @@ while ($bling_api_cod_erro == 0) {
                             'est_sugest' => '',
                             'op_sugest' => '',
                             'pc_sugest' => '',
-                            'qtde_pend' => $item->quantidade - $itens_nf[$item->codigo],
+                            'qtde_pend' => $item->quantidade - $itens_nf[$item->id],
                             'situacao' => '',
                             'situacao_color' => '',
                             'data_prev' => '',
                             'doc' => '',
                             'saldo_est' => '',
-                            'item_fat_parcial' => isset($itens_nf[$item->codigo]) ? 'SIM' : 'NAO'
+                            'item_fat_parcial' => isset($itens_nf[$item->id]) ? 'SIM' : 'NAO'
                         );
 
                         //se item parcial abatee
-                        if (isset($itens_nf[$item->codigo])) {
-                            // echo "ANTES--ITEM COD: $item->codigo - QTDE PEDIDO: $item->quantidade - QTDE NF: " . $itens_nf[$item->codigo] . ' <hr>';
+                        if (isset($itens_nf[$item->id])) {
+                            // echo "ANTES--ITEM COD: $item->codigo - QTDE PEDIDO: $item->quantidade - QTDE NF: " . $itens_nf[$item->id] . ' <hr>';
 
-                            if ($itens_nf[$item->codigo] >= $item->quantidade) {
-                                $itens_nf[$item->codigo] = $itens_nf[$item->codigo] - $item->quantidade;
+                            if ($itens_nf[$item->id] >= $item->quantidade) {
+                                $itens_nf[$item->id] = $itens_nf[$item->id] - $item->quantidade;
                             } else {
-                                $itens_nf[$item->codigo] = 0;
+                                $itens_nf[$item->id] = 0;
                             }
 
-                            // echo "DEPOIS--ITEM COD: $item->codigo - QTDE PENDENTE: " . $itens_nf[$item->codigo] . ' <hr>';
+                            // echo "DEPOIS--ITEM COD: $item->codigo - QTDE PENDENTE: " . $itens_nf[$item->id] . ' <hr>';
                         }
                     }
                 }
