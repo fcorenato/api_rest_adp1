@@ -113,7 +113,7 @@ while ($bling_api_cod_erro == 0) {
 
                         if (mysql_num_rows($result_pf) > 0) {
                             while ($row_pf = mysql_fetch_array($result_pf)) {
-                                $itens_nf['' . $row_pf['item_pv_id'] . ''] = $row_pf['qtde_fat'];
+                                $itens_nf['' . $row_pf['item_pv_id'] . ''] += $row_pf['qtde_fat'];
                             }
                         }
 
@@ -365,7 +365,7 @@ while ($bling_api_cod_erro == 0) {
 
                         if (mysql_num_rows($result_pf) > 0) {
                             while ($row_pf = mysql_fetch_array($result_pf)) {
-                                $itens_nf['' . $row_pf['item_pv_id'] . ''] = $row_pf['qtde_fat'];
+                                $itens_nf['' . $row_pf['item_pv_id'] . ''] += $row_pf['qtde_fat'];
                             }
                         }
 
