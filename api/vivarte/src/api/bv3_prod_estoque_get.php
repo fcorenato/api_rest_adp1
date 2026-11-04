@@ -62,6 +62,11 @@ $dep_arry['14888219394'] = 'AG-OUTLET';
 $dep_arry['14888910003'] = 'VC-OUTLET';
 $dep_arry['14889039612'] = 'VM-OUTLET';
 
+//armzem promocional black
+$dep_arry['14889247697'] = 'VC-BLACK';
+$dep_arry['14889247698'] = 'VH-BLACK';
+$dep_arry['14889247701'] = 'VM-BLACK';
+
 if ($resultado2->error) {
     $msg = 'Erro api bling v3 (bv3_pv_get.php AB) = type: ' . $resultado->error->message . ' - ' . $resultado->error->description;
     botc_enviar($msg);
@@ -73,7 +78,7 @@ if ($resultado2->error) {
         $resultado2_count++;
         $prod_codigo = $data->produto->codigo;
         foreach ($data->depositos as  $dep) {
-            if (($dep->id == '1462456848' or $dep->id == '11919578899' or $dep->id == '14887297853' or $dep->id == '14886856259' or $dep->id == '14888219392' or $dep->id == '14888219394' or $dep->id == '14888910003' or $dep->id == '14889039612' ) and $dep->saldoFisico > 0) {
+            if ((isset($dep_arry[$dep->id])) and $dep->saldoFisico > 0) {
                 // echo $dep->id .' dep = ' . $dep_arry[$dep->id] . ' prod = '. $prod_codigo .' qtde = ' . $dep->saldoFisico . '<br>';
                 $estoquedisp[] = array(
                     'ref' => $prod_codigo,
@@ -130,15 +135,6 @@ curl_close($curl);
 $resultado2 = json_decode($retorno2);
 // print("res: <pre>" . print_r($resultado2, true) . "</pre>");
 
-$dep_arry['1462456848'] = 'VC-PA';
-$dep_arry['11919578899'] = 'VH-PA';
-$dep_arry['14887297853'] = 'VM-PA';
-$dep_arry['14886856259'] = 'AG-PA';
-
-$dep_arry['14888219392'] = 'VH-OUTLET';
-$dep_arry['14888219394'] = 'AG-OUTLET';
-$dep_arry['14888910003'] = 'VC-OUTLET';
-$dep_arry['14889039612'] = 'VM-OUTLET';
 
 if ($resultado2->error) {
     $msg = 'Erro api bling v3 (bv3_pv_get.php AB) = type: ' . $resultado->error->message . ' - ' . $resultado->error->description;
@@ -151,7 +147,7 @@ if ($resultado2->error) {
         $resultado2_count++;
         $prod_codigo = $data->produto->codigo;
         foreach ($data->depositos as  $dep) {
-            if (($dep->id == '1462456848' or $dep->id == '11919578899' or $dep->id == '14887297853' or $dep->id == '14886856259' or $dep->id == '14888219392' or $dep->id == '14888219394' or $dep->id == '14888910003' or $dep->id == '14889039612') and $dep->saldoFisico > 0) {
+            if ((isset($dep_arry[$dep->id])) and $dep->saldoFisico > 0) {
                 // echo 'dep = ' . $dep_arry[$dep->id] . ' qtde = ' . $dep->saldoFisico . '<br>';
                 // echo $dep->id .' dep = ' . $dep_arry[$dep->id] . ' prod = '. $prod_codigo .' qtde = ' . $dep->saldoFisico . '<br>';
                 $estoquedisp[] = array(
