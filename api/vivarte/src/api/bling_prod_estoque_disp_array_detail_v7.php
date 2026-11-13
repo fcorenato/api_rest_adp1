@@ -1719,9 +1719,9 @@ if ($atualiza_estoque_biv) {
 
         if ($value_estoq['saldo_disp'] > 0) {
             $ref_prod = $value_estoq['ref'];
-            $saldo_prod = $value_estoq['saldo_disp'] -  $reserva_local[$value_estoq['deposito']];
-            $estoque_empenho = $value_estoq['saldo_disp'] - $value_estoq['saldo_disp_atu'];
-            $saldo_disp = $value_estoq['saldo_disp_atu'];
+            $saldo_prod = $value_estoq['saldo_disp'];
+            $estoque_empenho = $value_estoq['saldo_disp'] - $value_estoq['saldo_disp_atu'] + $reserva_local[$value_estoq['deposito']];
+            $saldo_disp = $value_estoq['saldo_disp_atu'] -  $reserva_local[$value_estoq['deposito']];
             $unidade_medida_produto_pesquisado = $value_estoq['ref_um'];
             $local = $value_estoq['deposito'];
             $tipo_estq = "ESTQ";
