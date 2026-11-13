@@ -348,7 +348,7 @@ if ($processar_carteira) {
                             if ($reserva_item > 0) {
                                 echo "<br>Verificando reserva para pedido: " . $value_ped['ped_num'] . " (Ped_id: " . $value_ped['ped_id'] . " - item_id: " . $value_ped['item_pv_id'] . ") ref: " . $value_ped['item_ref'] . " - qtde pendente: $qtde_pendente_pv  - Local: " . $value_estoq['deposito'] . " Reserva qtde: " . $reserva_item . "<br>";
 
-                                $reserva_local[$value_estoq['deposito']] += $reserva_item;
+                                $reserva_local[$value_estoq['deposito'][$value_ped['item_ref']]] += $reserva_item;
 
                                 if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] > 0 and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET' and $value_estoq['deposito'] != 'VC-OUTLET' and $value_estoq['deposito'] != 'VM-OUTLET') and $value_estoq['deposito'] != 'VC-BLACK' and $value_estoq['deposito'] != 'VH-BLACK' and $value_estoq['deposito'] != 'VM-BLACK') {
                                     echo '<br>Reserva atendida!<br>';
@@ -1720,8 +1720,8 @@ if ($atualiza_estoque_biv) {
         if ($value_estoq['saldo_disp'] > 0) {
             $ref_prod = $value_estoq['ref'];
             $saldo_prod = $value_estoq['saldo_disp'];
-            $estoque_empenho = $value_estoq['saldo_disp'] - $value_estoq['saldo_disp_atu'] + $reserva_local[$value_estoq['deposito']];
-            $saldo_disp = $value_estoq['saldo_disp_atu'] -  $reserva_local[$value_estoq['deposito']];
+            $estoque_empenho = $value_estoq['saldo_disp'] - $value_estoq['saldo_disp_atu'] + $reserva_local[$value_estoq['deposito'][$value_estoq['ref']]];
+            $saldo_disp = $value_estoq['saldo_disp_atu'] -  $reserva_local[$value_estoq['deposito'][$value_estoq['ref']]];
             $unidade_medida_produto_pesquisado = $value_estoq['ref_um'];
             $local = $value_estoq['deposito'];
             $tipo_estq = "ESTQ";
