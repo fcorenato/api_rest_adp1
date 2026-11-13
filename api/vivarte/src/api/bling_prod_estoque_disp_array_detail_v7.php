@@ -208,12 +208,6 @@ if ($processar_carteira) {
         //exibir reservas
         echo '<hr>Reservas: <br>';
         print("<pre>" . print_r($reserva_prod, true) . "</pre>");
-        echo '<br> qtde:' . $reserva_prod['25911918646-19525725568-KACS2060-VC-PA'] . '<hr>';
-        $reserva_item = $reserva_prod['25911918646-19525725568-KACS2060-VM-PA'];
-        echo '<br> Reserva de item maior que zero:' . $reserva_item . '<br>';
-        print("<pre>" . print_r($pedido_reserva, true) . "</pre>");
-        echo '<br> qtde:' . $pedido_reserva['25911918646'] . '<hr>';
-
         echo '<br>FIM Reservas: <hr>';
 
 
