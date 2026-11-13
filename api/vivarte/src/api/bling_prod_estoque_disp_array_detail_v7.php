@@ -196,7 +196,6 @@ if ($processar_carteira) {
         //cria array com reserva de produto
         $reserva_prod = array();
         $pedido_reserva = array();
-        $reserva_local = array();
         $query1 = "SELECT * FROM md_estoque_reserva WHERE status = 'A'";
         $result_query1 = mysql_query($query1);
         $qtde_query1 = mysql_num_rows($result_query1);
@@ -209,6 +208,12 @@ if ($processar_carteira) {
         //exibir reservas
         echo '<hr>Reservas: <br>';
         print("<pre>" . print_r($reserva_prod, true) . "</pre>");
+        echo '<br> qtde:' . $reserva_prod['25911918646-19525725568-KACS2060-VC-PA'] . '<hr>';
+        $reserva_item = $reserva_prod['25911918646-19525725568-KACS2060-VM-PA'];
+        echo '<br> Reserva de item maior que zero:' . $reserva_item . '<br>';
+        print("<pre>" . print_r($pedido_reserva, true) . "</pre>");
+        echo '<br> qtde:' . $pedido_reserva['25911918646'] . '<hr>';
+
         echo '<br>FIM Reservas: <hr>';
 
 
@@ -347,8 +352,6 @@ if ($processar_carteira) {
                             //se tem reserva para o item
                             if ($reserva_item > 0) {
                                 echo "<br>Verificando reserva para pedido: " . $value_ped['ped_num'] . " (Ped_id: " . $value_ped['ped_id'] . " - item_id: " . $value_ped['item_pv_id'] . ") ref: " . $value_ped['item_ref'] . " - qtde pendente: $qtde_pendente_pv  - Local: " . $value_estoq['deposito'] . " Reserva qtde: " . $reserva_item . "<br>";
-
-                                $reserva_local[$value_estoq['deposito'][$value_ped['item_ref']]] += $reserva_item;
 
                                 if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] > 0 and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET' and $value_estoq['deposito'] != 'VC-OUTLET' and $value_estoq['deposito'] != 'VM-OUTLET') and $value_estoq['deposito'] != 'VC-BLACK' and $value_estoq['deposito'] != 'VH-BLACK' and $value_estoq['deposito'] != 'VM-BLACK') {
                                     echo '<br>Reserva atendida!<br>';
@@ -1720,8 +1723,8 @@ if ($atualiza_estoque_biv) {
         if ($value_estoq['saldo_disp'] > 0) {
             $ref_prod = $value_estoq['ref'];
             $saldo_prod = $value_estoq['saldo_disp'];
-            $estoque_empenho = $value_estoq['saldo_disp'] - $value_estoq['saldo_disp_atu'] + $reserva_local[$value_estoq['deposito'][$value_estoq['ref']]];
-            $saldo_disp = $value_estoq['saldo_disp_atu'] -  $reserva_local[$value_estoq['deposito'][$value_estoq['ref']]];
+            $estoque_empenho = $value_estoq['saldo_disp'] - $value_estoq['saldo_disp_atu'];
+            $saldo_disp = $value_estoq['saldo_disp_atu'];
             $unidade_medida_produto_pesquisado = $value_estoq['ref_um'];
             $local = $value_estoq['deposito'];
             $tipo_estq = "ESTQ";
