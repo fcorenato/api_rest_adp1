@@ -196,6 +196,7 @@ if ($processar_carteira) {
         //cria array com reserva de produto
         $reserva_prod = array();
         $pedido_reserva = array();
+        $reserva_local = array();
         $query1 = "SELECT * FROM md_estoque_reserva WHERE status = 'A'";
         $result_query1 = mysql_query($query1);
         $qtde_query1 = mysql_num_rows($result_query1);
@@ -346,6 +347,8 @@ if ($processar_carteira) {
                             //se tem reserva para o item
                             if ($reserva_item > 0) {
                                 echo "<br>Verificando reserva para pedido: " . $value_ped['ped_num'] . " (Ped_id: " . $value_ped['ped_id'] . " - item_id: " . $value_ped['item_pv_id'] . ") ref: " . $value_ped['item_ref'] . " - qtde pendente: $qtde_pendente_pv  - Local: " . $value_estoq['deposito'] . " Reserva qtde: " . $reserva_item . "<br>";
+
+                                $reserva_local[$value_estoq['deposito']] += $reserva_item;
 
                                 if ($value_estoq['ref'] == $value_ped['item_ref'] and $qtde_pendente_pv > 0 and $value_estoq['saldo_disp_atu'] > 0 and ($value_estoq['deposito'] != 'VH-OUTLET' and $value_estoq['deposito'] != 'AG-OUTLET' and $value_estoq['deposito'] != 'VC-OUTLET' and $value_estoq['deposito'] != 'VM-OUTLET') and $value_estoq['deposito'] != 'VC-BLACK' and $value_estoq['deposito'] != 'VH-BLACK' and $value_estoq['deposito'] != 'VM-BLACK') {
                                     echo '<br>Reserva atendida!<br>';
@@ -1717,7 +1720,7 @@ if ($atualiza_estoque_biv) {
         if ($value_estoq['saldo_disp'] > 0) {
             $ref_prod = $value_estoq['ref'];
             $saldo_prod = $value_estoq['saldo_disp'];
-            $estoque_empenho = $value_estoq['saldo_disp'] - $value_estoq['saldo_disp_atu'];
+            $estoque_empenho = $value_estoq['saldo_disp'] - $value_estoq['saldo_disp_atu'] + $reserva_local[$value_estoq['deposito']];
             $saldo_disp = $value_estoq['saldo_disp_atu'];
             $unidade_medida_produto_pesquisado = $value_estoq['ref_um'];
             $local = $value_estoq['deposito'];
